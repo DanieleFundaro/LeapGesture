@@ -1,80 +1,61 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Leap;
 using Leap.Unity;
 
 public class Afferra : MonoBehaviour
 {
-  public HandModel mano;
-  public float minGrab = 0.1f;
-  private Vector3 offset, normale;
-  private Collider colliso;
+  public RigidHand mano;
+  public float minGrab = 0.5f;
+  private Transform colliso;
 
-  void Start()
+  public void OnValidate()
   {
-    offset = Vector3.zero;
+    IHandModel ihm = this.gameObject.GetComponent<IHandModel>();
+
+    if (ihm != null)
+      mano = (RigidHand)ihm;
+  }
+
+  public void Start()
+  {
     colliso = null;
   }
 
-  void Update()
-  {
-    if (offset != Vector3.zero && colliso != null)
-    {
-      Controller c = new Controller();
-      Frame f = c.Frame();
-      Hand h = f.Hand(mano.LeapID());  // Prendo la mano 0 perchè per ora lo script è attaccato nelle singole dita di ogni mano, quindi la mano da considerare è sempre la prima dell'array
-
-      if (h.GrabStrength >= minGrab)
-      {
-        // Effettuo lo spostamento dell'oggetto, controllando continuamente dove si trova il palmo della mano, mantenendo sempre la stessa distanza (calcolata già prima) da quest'ultimo
-        colliso.transform.position = (mano.palm.position + offset);
-
-        // Effettuo la rotazione dell'oggetto, calcolando il nuovo vettore della normale del palmo della mano
-        Vector3 nuovaNormale = h.PalmNormal.ToVector3();
-        nuovaNormale.z *= -1.0f;    // Moltiplico per -1.0f perchè l'asse z della Leap Motion ha il verso positivo che punta sull'utente e non sullo schermo
-        colliso.transform.rotation = Quaternion.FromToRotation(normale, nuovaNormale);
-      }
-      else
-        Rilascio();
-    }
-  }
-
-  void OnCollisionEnter(Collision collision)
+  public void OnTriggerEnter(Collider other)
   {
     Controller c = new Controller();
-    Frame f = c.Frame();
-    Hand h = f.Hand(mano.LeapID());
 
-    if (h.GrabStrength >= minGrab)
+    if (c.IsConnected && colliso == null && other.tag != "Imprendibile")
     {
-      // Intercettazione dell'oggetto colliso e calcolo della distanza dal palmo della mano. Durante lo spostamento questa distanza deve restare invariata
-      colliso = collision.collider;
-      AbilitaDisabilitaSpostamento(true);
-      offset = colliso.transform.position - mano.palm.position;
-
-      // Calcolo il vettore normale del palmo della mano per poter effettuare successivamente la rotazione dell'oggetto
-      normale = h.PalmNormal.ToVector3();
-      normale.z *= -1.0f;           // Moltiplico per -1.0f perchè l'asse z della Leap Motion ha il verso positivo che punta sull'utente e non sullo schermo
+      SendMessageUpwards("StoAfferrando", true);
+      colliso = GetPadre(other.transform);
     }
   }
 
-  private void Rilascio()
+  public void OnTriggerStay(Collider other)
   {
-    offset = Vector3.zero;
-    AbilitaDisabilitaSpostamento(false);
+    if (colliso != null)
+      mano.StartGrab(colliso, minGrab);
   }
 
-  private void AbilitaDisabilitaSpostamento(bool abilitato)
+  public void OnTriggerExit(Collider other)
   {
-    Rigidbody corpo = colliso.GetComponent<Rigidbody>();
-
-    if (corpo != null)
+    if (colliso != null)
     {
-      corpo.isKinematic = abilitato;
-      corpo.useGravity = !abilitato;
-      //corpo.constraints = abilitato ? RigidbodyConstraints.FreezeAll : RigidbodyConstraints.None;
-      colliso.GetComponent<MeshCollider>().isTrigger = abilitato;
-      colliso.enabled = !abilitato;
+      mano.StopGrab(colliso);
+      colliso = null;
+      SendMessageUpwards("StoAfferrando", false);
     }
+  }
+
+  private Transform GetPadre(Transform other)
+  {
+    if (other == null)
+      return null;
+
+    if (other.parent == null)
+      return other;
+
+    return GetPadre(other.transform.parent);
   }
 }

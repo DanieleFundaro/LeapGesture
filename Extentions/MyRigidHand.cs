@@ -14,7 +14,7 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="obj">Oggetto da afferrare.</param>
-      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.[0, 1]</param>
       /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto.</param>
       /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min, Transform parent, string tagUntouchable)
@@ -32,7 +32,7 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="obj">Oggetto da afferrare.</param>
-      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.[0, 1]</param>
       /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto.</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min, Transform parent)
       {
@@ -44,7 +44,7 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="obj">Oggetto da afferrare.</param>
-      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.[0, 1]</param>
       /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min, string tagUntouchable)
       {
@@ -68,7 +68,7 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="obj">Oggetto da afferrare.</param>
-      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.[0, 1]</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min)
       {
         StartGrab(hand, obj, min, null, null);
@@ -127,10 +127,73 @@ namespace Leap
         StopGrab(hand, obj, null);
       }
 
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di presa e afferra l'oggetto obj.
+      /// Questo metodo serve per poter spostare e ruotare un assemblato di oggetti.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Genitore che si vuole afferrare per spostarlo e ruotarlo.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa. [0, 1]</param>
+      /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
+      public static void StartGrab(this RigidHand hand, Transform obj, float min, string tagUntouchable)
+      {
+        Hand h = hand.GetLeapHand();
+
+        if (h != null && h.GrabStrength >= min && obj.tag != tagUntouchable)
+          obj.SetParent(hand.palm);
+        else
+          StopGrab(hand, obj);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di presa e afferra l'oggetto obj.
+      /// Questo metodo serve per poter spostare e ruotare un assemblato di oggetti.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Genitore che si vuole afferrare per spostarlo e ruotarlo.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa. [0, 1]</param>
+      public static void StartGrab(this RigidHand hand, Transform obj, float min)
+      {
+        StartGrab(hand, obj, min, null);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di presa e afferra l'oggetto obj.
+      /// Questo metodo serve per poter spostare e ruotare un assemblato di oggetti.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Genitore che si vuole afferrare per spostarlo e ruotarlo.</param>
+      /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
+      public static void StartGrab(this RigidHand hand, Transform obj, string tagUntouchable)
+      {
+        StartGrab(hand, obj, 0.5f, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di presa e afferra l'oggetto obj.
+      /// Questo metodo serve per poter spostare e ruotare un assemblato di oggetti.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Genitore che si vuole afferrare per spostarlo e ruotarlo.</param>
+      public static void StartGrab(this RigidHand hand, Transform obj)
+      {
+        StartGrab(hand, obj, 0.5f, null);
+      }
+
+      /// <summary>
+      /// Rilascio definitivo dell'oggetto obj afferrato.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Genitore afferrato.</param>
+      public static void StopGrab(this RigidHand hand, Transform obj)
+      {
+        obj.parent = null;
+      }
+
       #endregion
 
       #region Explosion effect
-      
+
       private static float tempo = 0, tempoMax = 0.5f;
 
       /// <summary>
