@@ -27,8 +27,8 @@ public class Afferra : MonoBehaviour
 
     if (c.IsConnected && colliso == null && other.tag != "Imprendibile")
     {
-      SendMessageUpwards("StoAfferrando", true);
       colliso = GetPadre(other.transform);
+      SendMessageUpwards("StoAfferrando", true);
     }
   }
 
