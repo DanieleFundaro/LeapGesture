@@ -9,6 +9,9 @@ namespace Leap
     {
       #region Start and stop grab
 
+      private static float minGrab = 0.5f;
+      private static string tag = null;
+
       /// <summary>
       /// Controlla se è stato effettuato il gesto di presa e afferra l'oggetto obj.
       /// </summary>
@@ -36,7 +39,7 @@ namespace Leap
       /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto.</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min, Transform parent)
       {
-        StartGrab(hand, obj, min, parent, null);
+        StartGrab(hand, obj, min, parent, tag);
       }
 
       /// <summary>
@@ -60,7 +63,7 @@ namespace Leap
       /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void StartGrab(this RigidHand hand, Collider obj, Transform parent, string tagUntouchable)
       {
-        StartGrab(hand, obj, 0.5f, parent, tagUntouchable);
+        StartGrab(hand, obj, minGrab, parent, tagUntouchable);
       }
 
       /// <summary>
@@ -71,7 +74,7 @@ namespace Leap
       /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa.[0, 1]</param>
       public static void StartGrab(this RigidHand hand, Collider obj, float min)
       {
-        StartGrab(hand, obj, min, null, null);
+        StartGrab(hand, obj, min, null, tag);
       }
 
       /// <summary>
@@ -82,7 +85,7 @@ namespace Leap
       /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto.</param>
       public static void StartGrab(this RigidHand hand, Collider obj, Transform parent)
       {
-        StartGrab(hand, obj, 0.5f, parent, null);
+        StartGrab(hand, obj, minGrab, parent, tag);
       }
 
       /// <summary>
@@ -93,7 +96,7 @@ namespace Leap
       /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void StartGrab(this RigidHand hand, Collider obj, string tagUntouchable)
       {
-        StartGrab(hand, obj, 0.5f, null, tagUntouchable);
+        StartGrab(hand, obj, minGrab, null, tagUntouchable);
       }
 
       /// <summary>
@@ -103,7 +106,7 @@ namespace Leap
       /// <param name="obj">Oggetto da afferrare.</param>
       public static void StartGrab(this RigidHand hand, Collider obj)
       {
-        StartGrab(hand, obj, 0.5f, null, null);
+        StartGrab(hand, obj, minGrab, null, tag);
       }
 
       /// <summary>
@@ -154,7 +157,7 @@ namespace Leap
       /// <param name="min">Valore minimo per cui si può considerare valido il gesto di presa. [0, 1]</param>
       public static void StartGrab(this RigidHand hand, Transform obj, float min)
       {
-        StartGrab(hand, obj, min, null);
+        StartGrab(hand, obj, min, tag);
       }
 
       /// <summary>
@@ -166,7 +169,7 @@ namespace Leap
       /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void StartGrab(this RigidHand hand, Transform obj, string tagUntouchable)
       {
-        StartGrab(hand, obj, 0.5f, tagUntouchable);
+        StartGrab(hand, obj, minGrab, tagUntouchable);
       }
 
       /// <summary>
@@ -177,7 +180,7 @@ namespace Leap
       /// <param name="obj">Genitore che si vuole afferrare per spostarlo e ruotarlo.</param>
       public static void StartGrab(this RigidHand hand, Transform obj)
       {
-        StartGrab(hand, obj, 0.5f, null);
+        StartGrab(hand, obj, minGrab, tag);
       }
 
       /// <summary>
@@ -192,7 +195,75 @@ namespace Leap
 
       #endregion
 
-      #region Explosion effect
+      #region Pinch
+
+      private static float minPinch = 0.9f;
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di pizzico e sposta l'oggetto obj in direzione radiale rispetto al genitore parent, senza scendere mai sotto la posizione iniziale.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Oggetto da spostare.</param>
+      /// <param name="parent">Genitore dell'oggetto obj.</param>
+      /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
+      /// <param name="initialPositionObj">Posizione iniziale dell'oggetto obj.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di pizzico. [0, 1]</param>
+      /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi)</param>
+      public static void Pinch(this RigidHand hand, Transform obj, Transform parent, Transform fingerBone, Vector3 initialPositionObj, float min, string tagUntouchable)
+      {
+        if (hand.GetLeapHand().PinchStrength >= min && obj.tag != tagUntouchable)
+        {
+          Vector3 dir = obj.position - parent.position, dirMano = fingerBone.position - parent.position, nuovaPosizione = parent.position + Vector3.Project(dirMano, dir);
+
+          if (nuovaPosizione.IsLongerThan(initialPositionObj, parent.position))
+            obj.position = nuovaPosizione;
+        }
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di pizzico e sposta l'oggetto obj in direzione radiale rispetto al genitore parent, senza scendere mai sotto la posizione iniziale.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Oggetto da spostare.</param>
+      /// <param name="parent">Genitore dell'oggetto obj.</param>
+      /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
+      /// <param name="initialPositionObj">Posizione iniziale dell'oggetto obj.</param>
+      /// <param name="min">Valore minimo per cui si può considerare valido il gesto di pizzico. [0, 1]</param>
+      public static void Pinch(this RigidHand hand, Transform obj, Transform parent, Transform fingerBone, Vector3 initialPositionObj, float min)
+      {
+        Pinch(hand, obj, parent, fingerBone, initialPositionObj, min, null);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di pizzico e sposta l'oggetto obj in direzione radiale rispetto al genitore parent, senza scendere mai sotto la posizione iniziale.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Oggetto da spostare.</param>
+      /// <param name="parent">Genitore dell'oggetto obj.</param>
+      /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
+      /// <param name="initialPositionObj">Posizione iniziale dell'oggetto obj.</param>
+      /// <param name="tagUntouchable">Tag appartenente agli oggetti da ignorare (null se tutti possono essere presi)</param>
+      public static void Pinch(this RigidHand hand, Transform obj, Transform parent, Transform fingerBone, Vector3 initialPositionObj, string tagUntouchable)
+      {
+        Pinch(hand, obj, parent, fingerBone, initialPositionObj, minPinch, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di pizzico e sposta l'oggetto obj in direzione radiale rispetto al genitore parent, senza scendere mai sotto la posizione iniziale.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="obj">Oggetto da spostare.</param>
+      /// <param name="parent">Genitore dell'oggetto obj.</param>
+      /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
+      /// <param name="initialPositionObj">Posizione iniziale dell'oggetto obj.</param>
+      public static void Pinch(this RigidHand hand, Transform obj, Transform parent, Transform fingerBone, Vector3 initialPositionObj)
+      {
+        Pinch(hand, obj, parent, fingerBone, initialPositionObj, minPinch, null);
+      }
+
+      #endregion
+
+        #region Explosion effect
 
       private static float tempo = 0, tempoMax = 0.5f;
 
