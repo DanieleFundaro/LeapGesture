@@ -45,11 +45,11 @@ public class RadialPinch : MonoBehaviour
 
   public void OnTriggerStay(Collider other)
   {
-    if (colliso != null && mano.GetLeapHand().PinchStrength == 1)
+    if (colliso != null && mano.GetLeapHand().PinchStrength >= 0.9f)
     {
       Vector3 dir = colliso.position - padre.position, dirMano = transform.position - padre.position, nuovaPosizione = padre.position + Vector3.Project(dirMano, dir);
 
-      if (Max(nuovaPosizione, posIniziali[colliso], padre.position))
+      if (nuovaPosizione.IsLongerThan(posIniziali[colliso], padre.position))
         colliso.position = nuovaPosizione;
     }
   }
@@ -62,13 +62,5 @@ public class RadialPinch : MonoBehaviour
       padre = null;
       SendMessageUpwards("StoAfferrando", false);
     }
-  }
-
-  private bool Max(Vector3 a, Vector3 b, Vector3 center)
-  {
-    // Controllo se la lunghezza del punto a è maggiore rispetto alla lunghezza del punto b, rispetto a un punto centrale
-    Vector3 p1 = a - center, p2 = b - center;
-
-    return p1.magnitude > p2.magnitude;
   }
 }
