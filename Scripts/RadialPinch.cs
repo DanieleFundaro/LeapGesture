@@ -45,13 +45,8 @@ public class RadialPinch : MonoBehaviour
 
   public void OnTriggerStay(Collider other)
   {
-    if (colliso != null && mano.GetLeapHand().PinchStrength >= 0.9f)
-    {
-      Vector3 dir = colliso.position - padre.position, dirMano = transform.position - padre.position, nuovaPosizione = padre.position + Vector3.Project(dirMano, dir);
-
-      if (nuovaPosizione.IsLongerThan(posIniziali[colliso], padre.position))
-        colliso.position = nuovaPosizione;
-    }
+    if (colliso != null)
+      mano.Pinch(colliso, padre, transform, posIniziali[colliso], 0.9f);
   }
 
   public void OnTriggerExit(Collider other)
