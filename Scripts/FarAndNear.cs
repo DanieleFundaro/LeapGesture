@@ -60,7 +60,7 @@ public class FarAndNear : MonoBehaviour
           Vector3 nuovaPosizione = padreDestro.position + obj.Value * ((distanza - offset) * velocita + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
-          if (Max(nuovaPosizione, posIniziali[obj.Key], padreDestro.position))
+          if (nuovaPosizione.IsLongerThan(posIniziali[obj.Key], padreDestro.position))
             obj.Key.position = nuovaPosizione;
         }
       }
@@ -128,17 +128,6 @@ public class FarAndNear : MonoBehaviour
       lr.SetPosition(1, mano.GetPalmPosition() + dir);
       GameObject.Destroy(myLine, 0.05f);
     }
-  }
-
-  private bool Max(Vector3 a, Vector3 b, Vector3 dir)
-  {
-    // Controllo se la lunghezza del punto a è maggiore rispetto alla lunghezza del punto b, rispetto a una direzione data
-    Vector3 p1 = a - dir, p2 = b - dir;
-
-    if (p1.magnitude < p2.magnitude)
-      return false;
-
-    return true;
   }
 
   private void StoAfferrando(bool stoAfferrando)
