@@ -1,18 +1,17 @@
 ﻿using UnityEngine;
-using Leap;
+using System.Collections;
 using Leap.Unity;
-using System;
 
-public class AfferraTr : MonoBehaviour
+public class Pinch : MonoBehaviour
 {
   public RigidHand mano;
-  public float minGrab = 0.5f;
+  public float minPinch = 0.9f;
   private Collider colliso;
   private Transform padre;
 
   public void OnValidate()
   {
-    IHandModel ihm = this.gameObject.GetComponent<IHandModel>();
+    IHandModel ihm = gameObject.GetComponentInParent<IHandModel>();
 
     if (ihm != null)
       mano = (RigidHand)ihm;
@@ -23,12 +22,9 @@ public class AfferraTr : MonoBehaviour
     colliso = null;
     padre = null;
   }
-
   public void OnTriggerEnter(Collider other)
   {
-    Controller c = new Controller();
-
-    if (c.IsConnected && colliso == null && padre == null && other.tag != "Imprendibile")
+    if(colliso == null && other.tag != "Imprendibile")
     {
       SendMessageUpwards("StoAfferrando", true);
       colliso = other;
@@ -38,15 +34,15 @@ public class AfferraTr : MonoBehaviour
 
   public void OnTriggerStay(Collider other)
   {
-    if (other == colliso)
-      mano.StartGrab(other, minGrab, padre);
+    if (colliso != null)
+      mano.Pinch(colliso, padre, transform, minPinch, null);
   }
 
   public void OnTriggerExit(Collider other)
   {
-    if (other == colliso)
+    if(colliso != null)
     {
-      mano.StopGrab(other, padre);
+      mano.StopPinch(colliso, padre);
       colliso = null;
       padre = null;
       SendMessageUpwards("StoAfferrando", false);
