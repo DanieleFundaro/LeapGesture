@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class RadialPinch : MonoBehaviour
 {
   public RigidHand mano;
+  public float minPinch = 0.9f;
   private Dictionary<Transform, Vector3> posIniziali;
   private Transform colliso, padre;
 
@@ -37,8 +38,8 @@ public class RadialPinch : MonoBehaviour
 
       if (padre != null)
       {
-        colliso = other.transform;
         SendMessageUpwards("StoAfferrando", true);
+        colliso = other.transform;
       }
     }
   }
@@ -46,7 +47,7 @@ public class RadialPinch : MonoBehaviour
   public void OnTriggerStay(Collider other)
   {
     if (colliso != null)
-      mano.Pinch(colliso, padre, transform, posIniziali[colliso], 0.9f);
+      mano.Pinch(colliso, padre, transform, posIniziali[colliso], minPinch);
   }
 
   public void OnTriggerExit(Collider other)
