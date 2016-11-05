@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Leap;
 using Leap.Unity;
 
 public class Afferra : MonoBehaviour
@@ -10,7 +9,7 @@ public class Afferra : MonoBehaviour
 
   public void OnValidate()
   {
-    IHandModel ihm = this.gameObject.GetComponent<IHandModel>();
+    IHandModel ihm = gameObject.GetComponentInParent<IHandModel>();
 
     if (ihm != null)
       mano = (RigidHand)ihm;
@@ -23,9 +22,7 @@ public class Afferra : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    Controller c = new Controller();
-
-    if (c.IsConnected && colliso == null && other.tag != "Imprendibile")
+    if (colliso == null && other.tag != "Imprendibile")
     {
       colliso = GetPadre(other.transform);
       SendMessageUpwards("StoAfferrando", true);
