@@ -13,6 +13,7 @@ public class FarAndNear : MonoBehaviour
   // Use this for initialization
   void Start()
   {
+    // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
     posIniziali = new Dictionary<Transform, Vector3>();
     Transform[] objs = FindObjectsOfType<Transform>();
 
@@ -35,8 +36,10 @@ public class FarAndNear : MonoBehaviour
         padreDestro = GetPadreColpito(manoDestra);
         padreSinistro = GetPadreColpito(manoSinistra);
 
+        // Controllo se sia la mano destra che la mano sinistra stanno puntando sullo stesso assemblato di oggetti. In caso affermativo posso iniziare la fare di spostamento radiale dei figli
         if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro))
         {
+          // Mi salvo a parte tutti i figli del padre e mi calcolo la loro direzione radiale
           for (int i = 0; i < padreDestro.childCount; i++)
           {
             Transform child = padreDestro.GetChild(i);
@@ -48,6 +51,7 @@ public class FarAndNear : MonoBehaviour
         }
       }
 
+      // Effettuo lo spostamento degli oggetti, controllando se è stato compiuto il giusto gesto (tutte e 2 le mani chiuse a pugno)
       if (selezione && manoDestra.IsTracked && manoSinistra.IsTracked && manoDestra.GetLeapHand().GrabAngle >= 2 && manoSinistra.GetLeapHand().GrabAngle >= 2)
       {
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
