@@ -5,20 +5,19 @@ using System.Collections.Generic;
 public class FarAndNear : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
-  private Dictionary<Transform, Vector3> childsDir, posIniziali;
+  private Dictionary<Transform, Vector3> childsDir, localPosIniziale;
   private Transform padreDestro, padreSinistro;
-  private bool selezione = false, afferra = false;
+  private bool selezione = false, afferraZoom = false;
   private float offset = 0, velocita = 10f;
 
   // Use this for initialization
   void Start()
   {
-    // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
-    posIniziali = new Dictionary<Transform, Vector3>();
+    localPosIniziale = new Dictionary<Transform, Vector3>();
     Transform[] objs = FindObjectsOfType<Transform>();
 
     foreach (Transform obj in objs)
-      posIniziali.Add(obj, new Vector3(obj.position.x, obj.position.y, obj.position.z));
+      localPosIniziale.Add(obj, new Vector3(obj.localPosition.x, obj.localPosition.y, obj.localPosition.z));
 
     Init();
   }
@@ -26,7 +25,7 @@ public class FarAndNear : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    if (!afferra)
+    if (!afferraZoom)
     {
       DrawLineHand(manoDestra);
       DrawLineHand(manoSinistra);
@@ -57,11 +56,11 @@ public class FarAndNear : MonoBehaviour
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
         {
           float distanza = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
-          Vector3 nuovaPosizione = padreDestro.position + obj.Value * ((distanza - offset) * velocita + 1);
+          Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocita + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
-          if (nuovaPosizione.IsLongerThan(posIniziali[obj.Key], padreDestro.position))
-            obj.Key.position = nuovaPosizione;
+          if (nuovaPosizione.IsLongerThan(localPosIniziale[obj.Key], obj.Value))
+            obj.Key.position = padreDestro.position + nuovaPosizione;
         }
       }
       else
@@ -132,6 +131,11 @@ public class FarAndNear : MonoBehaviour
 
   private void StoAfferrando(bool stoAfferrando)
   {
-    afferra = stoAfferrando;
+    afferraZoom = stoAfferrando;
+  }
+
+  private void InZoom(bool zoom)
+  {
+    afferraZoom = zoom;
   }
 }

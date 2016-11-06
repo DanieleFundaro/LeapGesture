@@ -6,9 +6,10 @@ using System.Collections.Generic;
 public class RadialPinch : MonoBehaviour
 {
   public RigidHand mano;
+  private Dictionary<Transform, Vector3> localPosIniziali;
   public float minPinch = 0.9f;
-  private Dictionary<Transform, Vector3> posIniziali;
   private Transform colliso, padre;
+  private bool inZoom = false;
 
   public void OnValidate()
   {
@@ -21,18 +22,19 @@ public class RadialPinch : MonoBehaviour
   public void Start()
   {
     // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
-    posIniziali = new Dictionary<Transform, Vector3>();
+    localPosIniziali = new Dictionary<Transform, Vector3>();
     Transform[] objs = FindObjectsOfType<Transform>();
 
     foreach (Transform obj in objs)
-      posIniziali.Add(obj, new Vector3(obj.position.x, obj.position.y, obj.position.z));
+      localPosIniziali.Add(obj, new Vector3(obj.localPosition.x, obj.localPosition.y, obj.localPosition.z));
 
     colliso = null;
+    padre = null;
   }
 
   public void OnTriggerEnter(Collider other)
   {
-    if (colliso == null && other.tag != "Imprendibile")
+    if (!inZoom && colliso == null && other.tag != "Imprendibile")
     {
       padre = other.transform.parent;
 
@@ -46,17 +48,22 @@ public class RadialPinch : MonoBehaviour
 
   public void OnTriggerStay(Collider other)
   {
-    if (colliso != null)
-      mano.Pinch(colliso, padre, transform, posIniziali[colliso], minPinch);
+    if (!inZoom && colliso != null && padre != null)
+      mano.Pinch(colliso, padre, transform, localPosIniziali[colliso], minPinch);
   }
 
   public void OnTriggerExit(Collider other)
   {
-    if (colliso != null)
+    if (!inZoom && colliso != null)
     {
       colliso = null;
       padre = null;
       SendMessageUpwards("StoAfferrando", false);
     }
+  }
+
+  private void InZoom(bool zoom)
+  {
+    inZoom = zoom;
   }
 }

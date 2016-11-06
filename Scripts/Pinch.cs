@@ -8,6 +8,7 @@ public class Pinch : MonoBehaviour
   public float minPinch = 0.9f;
   private Collider colliso;
   private Transform padre;
+  private bool inZoom = false;
 
   public void OnValidate()
   {
@@ -24,7 +25,7 @@ public class Pinch : MonoBehaviour
   }
   public void OnTriggerEnter(Collider other)
   {
-    if(colliso == null && other.tag != "Imprendibile")
+    if(!inZoom && colliso == null && other.tag != "Imprendibile")
     {
       SendMessageUpwards("StoAfferrando", true);
       colliso = other;
@@ -34,18 +35,23 @@ public class Pinch : MonoBehaviour
 
   public void OnTriggerStay(Collider other)
   {
-    if (colliso != null)
+    if (!inZoom && colliso != null)
       mano.Pinch(colliso, padre, transform, minPinch, null);
   }
 
   public void OnTriggerExit(Collider other)
   {
-    if(colliso != null)
+    if(!inZoom && colliso != null)
     {
       mano.StopPinch(colliso, padre);
       colliso = null;
       padre = null;
       SendMessageUpwards("StoAfferrando", false);
     }
+  }
+
+  private void InZoom(bool zoom)
+  {
+    inZoom = zoom;
   }
 }

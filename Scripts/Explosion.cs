@@ -8,7 +8,7 @@ public class Explosion : MonoBehaviour
 {
   public RigidHand mano;
   private ObjectsMove om = new ObjectsMove();
-  private bool selezione = false, esplodi = false, afferra = false;
+  private bool selezione = false, esplodi = false, afferraZoom = false;
 
   public void OnValidate()
   {
@@ -22,7 +22,7 @@ public class Explosion : MonoBehaviour
   public void Update()
   {
     // L'utente deve fare una cosa per volta, o afferra o fa esplodere
-    if (!afferra)
+    if (!afferraZoom)
     {
       Controller cont = new Controller();
 
@@ -72,7 +72,12 @@ public class Explosion : MonoBehaviour
 
   private void StoAfferrando(bool stoAfferrando)
   {
-    afferra = stoAfferrando;
+    afferraZoom = stoAfferrando;
+  }
+
+  private void InZoom(bool zoom)
+  {
+    afferraZoom = zoom;
   }
 
   private void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)

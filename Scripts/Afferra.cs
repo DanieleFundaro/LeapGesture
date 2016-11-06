@@ -6,6 +6,7 @@ public class Afferra : MonoBehaviour
   public RigidHand mano;
   public float minGrab = 0.5f;
   private Transform colliso;
+  private bool inZoom = false;
 
   public void OnValidate()
   {
@@ -22,22 +23,22 @@ public class Afferra : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    if (colliso == null && other.tag != "Imprendibile")
+    if (!inZoom && colliso == null && other.tag != "Imprendibile")
     {
-      colliso = GetPadre(other.transform);
       SendMessageUpwards("StoAfferrando", true);
+      colliso = GetPadre(other.transform);
     }
   }
 
   public void OnTriggerStay(Collider other)
   {
-    if (colliso != null)
+    if (!inZoom && colliso != null)
       mano.StartGrab(colliso, minGrab);
   }
 
   public void OnTriggerExit(Collider other)
   {
-    if (colliso != null)
+    if (!inZoom && colliso != null)
     {
       mano.StopGrab(colliso);
       colliso = null;
@@ -54,5 +55,10 @@ public class Afferra : MonoBehaviour
       return other;
 
     return GetPadre(other.transform.parent);
+  }
+
+  private void InZoom(bool zoom)
+  {
+    inZoom = zoom;
   }
 }

@@ -13,13 +13,13 @@ public class Zoom : MonoBehaviour
     if (manoDestra.IsTracked && manoSinistra.IsTracked)
       if (manoDestra.GetLeapHand().GrabAngle >= grabAngle && manoSinistra.GetLeapHand().GrabAngle >= grabAngle && manoDestra.GetPalmNormal().z / manoSinistra.GetPalmNormal().z < 0 && manoDestra.GetPalmDirection().x / manoSinistra.GetPalmDirection().x < 0)
       {
+        SendMessageUpwards("InZoom", true);
         Camera.main.fieldOfView = (offset - Distanza());
-        SendMessageUpwards("StoAfferrando", true);
       }
       else
       {
         offset = Distanza() + Camera.main.fieldOfView;
-        SendMessageUpwards("StoAfferrando", false);
+        SendMessageUpwards("InZoom", false);
       }
   }
 
