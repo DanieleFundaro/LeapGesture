@@ -7,6 +7,9 @@ public class ResetAll : MonoBehaviour
 {
   private Dictionary<Transform, Vector3> posIniziali;
   private Dictionary<Transform, Quaternion> rotIniziali;
+  private Transform[] objsInScene;
+  private float tempo = 0, tempoMax = 1.0f;
+  private bool start = false;
 
   // Use this for initialization
   void Start()
@@ -25,25 +28,37 @@ public class ResetAll : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    if (other.GetComponentInParent<IHandModel>() != null)
+    if (other.GetComponentInParent<IHandModel>() != null && tempo == 0)
     {
-      other.SendMessageUpwards("InZoom", true);
+      objsInScene = FindObjectsOfType<Transform>();
+      start = true;
+    }
+  }
 
-      Transform[] objs = FindObjectsOfType<Transform>();
+  public void Update()
+  {
+    if (start)
+    {
+      tempo += Time.deltaTime;
+      float percento = tempo > tempoMax ? 1 : tempo / tempoMax;
 
-      foreach (Transform obj in objs)
-        if (obj.tag != "Imprendibile" && obj.GetComponentInParent<IHandModel>() == null)
+      foreach (Transform obj in objsInScene)
+        if (obj != null && obj.tag != "Imprendibile" && obj.GetComponentInParent<IHandModel>() == null)
           try
           {
-            obj.position = posIniziali[obj];
-            obj.rotation = rotIniziali[obj];
+            obj.position = Vector3.Lerp(obj.position, posIniziali[obj], percento);
+            obj.rotation = Quaternion.Slerp(obj.rotation, rotIniziali[obj], percento);
           }
           catch (KeyNotFoundException)
           {
             ;
           }
 
-      other.SendMessageUpwards("InZoom", false);
+      if (percento == 1)
+      {
+        start = false;
+        tempo = 0;
+      }
     }
   }
 }
