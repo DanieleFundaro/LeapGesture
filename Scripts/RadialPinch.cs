@@ -49,7 +49,12 @@ public class RadialPinch : MonoBehaviour
   public void OnTriggerStay(Collider other)
   {
     if (!inZoom && colliso != null && padre != null)
-      mano.Pinch(colliso, padre, transform, localPosIniziali[colliso], minPinch);
+    {
+      Vector3 lpi = localPosIniziali[colliso];
+
+      if (lpi != null)
+        mano.Pinch(colliso, padre, transform, lpi, minPinch);
+    }
   }
 
   public void OnTriggerExit(Collider other)
