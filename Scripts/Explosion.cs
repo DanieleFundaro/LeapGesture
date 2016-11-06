@@ -45,7 +45,7 @@ public class Explosion : MonoBehaviour
             Transform padre = colpito.collider.transform.parent;
 
             // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano
-            if (padre != null)
+            if (padre != null && padre.tag != "Imprendibile")
             {
               RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
