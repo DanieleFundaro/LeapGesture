@@ -36,7 +36,7 @@ public class FarAndNear : MonoBehaviour
         padreSinistro = GetPadreColpito(manoSinistra);
 
         // Controllo se sia la mano destra che la mano sinistra stanno puntando sullo stesso assemblato di oggetti. In caso affermativo posso iniziare la fare di spostamento radiale dei figli
-        if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro))
+        if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro) && padreDestro.tag != "Imprendibile")
         {
           // Mi salvo a parte tutti i figli del padre e mi calcolo la loro direzione radiale
           for (int i = 0; i < padreDestro.childCount; i++)
@@ -53,9 +53,10 @@ public class FarAndNear : MonoBehaviour
       // Effettuo lo spostamento degli oggetti, controllando se è stato compiuto il giusto gesto (tutte e 2 le mani chiuse a pugno)
       if (selezione && manoDestra.IsTracked && manoSinistra.IsTracked && manoDestra.GetLeapHand().GrabAngle >= 2 && manoSinistra.GetLeapHand().GrabAngle >= 2)
       {
+        float distanza = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
+
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
         {
-          float distanza = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
           Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocita + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
