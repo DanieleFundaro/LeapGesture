@@ -31,6 +31,7 @@ public class ResetAll : MonoBehaviour
     if (other.GetComponentInParent<IHandModel>() != null && tempo == 0)
     {
       objsInScene = FindObjectsOfType<Transform>();
+      transform.position = new Vector3(transform.position.x, transform.position.y - 0.01f, transform.position.z);
       start = true;
     }
   }
@@ -43,7 +44,7 @@ public class ResetAll : MonoBehaviour
       float percento = tempo > tempoMax ? 1 : tempo / tempoMax;
 
       foreach (Transform obj in objsInScene)
-        if (obj != null && obj.tag != "Imprendibile" && obj.GetComponentInParent<IHandModel>() == null)
+        if (obj != null && obj.tag != "Imprendibile" && obj.tag != "MainCamera" && obj.GetComponentInParent<IHandModel>() == null || obj.Equals(transform))
           try
           {
             obj.position = Vector3.Lerp(obj.position, posIniziali[obj], percento);
@@ -58,6 +59,7 @@ public class ResetAll : MonoBehaviour
       {
         start = false;
         tempo = 0;
+        transform.tag = "Imprendibile";
       }
     }
   }
