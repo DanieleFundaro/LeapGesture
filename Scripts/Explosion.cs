@@ -36,7 +36,7 @@ public class Explosion : MonoBehaviour
         RaycastHit colpito = new RaycastHit();
 
         // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
-        DrawLine(mano.GetPalmPosition(), mano.GetPalmPosition() + dir, Color.green, 0.05f);
+        DrawLine(mano.GetPalmPosition(), mano.GetPalmPosition() + dir, Color.red, 0.05f);
 
         // Controllo se è stato puntato un oggetto
         if (Physics.Raycast(raggio, out colpito))
@@ -45,7 +45,7 @@ public class Explosion : MonoBehaviour
             Transform padre = colpito.collider.transform.parent;
 
             // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano
-            if (padre != null && padre.tag != "Imprendibile")
+            if (padre != null && padre.tag != "Imprendibile" && padre.tag != "MainCamera")
             {
               RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 

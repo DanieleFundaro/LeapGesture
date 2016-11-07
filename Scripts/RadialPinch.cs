@@ -34,7 +34,7 @@ public class RadialPinch : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    if (!inZoom && colliso == null && other.tag != "Imprendibile")
+    if (!inZoom && colliso == null && other.tag != "Imprendibile" && other.tag != "MainCamera")
     {
       padre = other.transform.parent;
 
@@ -49,12 +49,7 @@ public class RadialPinch : MonoBehaviour
   public void OnTriggerStay(Collider other)
   {
     if (!inZoom && colliso != null && padre != null)
-    {
-      Vector3 lpi = localPosIniziali[colliso];
-
-      if (lpi != null)
-        mano.Pinch(colliso, padre, transform, lpi, minPinch);
-    }
+        mano.Pinch(colliso, padre, transform, localPosIniziali[colliso], minPinch);
   }
 
   public void OnTriggerExit(Collider other)

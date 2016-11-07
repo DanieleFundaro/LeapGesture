@@ -23,7 +23,7 @@ public class Afferra : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    if (!inZoom && colliso == null && other.tag != "Imprendibile")
+    if (!inZoom && colliso == null && other.tag != "Imprendibile" && other.tag != "MainCamera")
     {
       SendMessageUpwards("StoAfferrando", true);
       colliso = GetPadre(other.transform);

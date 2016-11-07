@@ -25,7 +25,7 @@ public class Pinch : MonoBehaviour
   }
   public void OnTriggerEnter(Collider other)
   {
-    if(!inZoom && colliso == null && other.tag != "Imprendibile")
+    if(!inZoom && colliso == null && other.tag != "Imprendibile" && other.tag != "MainCamera")
     {
       SendMessageUpwards("StoAfferrando", true);
       colliso = other;

@@ -36,7 +36,7 @@ public class FarAndNear : MonoBehaviour
         padreSinistro = GetPadreColpito(manoSinistra);
 
         // Controllo se sia la mano destra che la mano sinistra stanno puntando sullo stesso assemblato di oggetti. In caso affermativo posso iniziare la fare di spostamento radiale dei figli
-        if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro) && padreDestro.tag != "Imprendibile")
+        if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro) && padreDestro.tag != "Imprendibile" && padreDestro.tag != "MainCamera")
         {
           // Mi salvo a parte tutti i figli del padre e mi calcolo la loro direzione radiale
           for (int i = 0; i < padreDestro.childCount; i++)
