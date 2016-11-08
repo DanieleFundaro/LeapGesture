@@ -36,7 +36,7 @@ public class Pinch : MonoBehaviour
   public void OnTriggerStay(Collider other)
   {
     if (!inZoom && colliso != null)
-      mano.Pinch(colliso, padre, transform, minPinch, null);
+      mano.Pinch(colliso, transform, padre, minPinch);
   }
 
   public void OnTriggerExit(Collider other)
