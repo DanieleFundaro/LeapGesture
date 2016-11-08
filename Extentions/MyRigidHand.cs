@@ -487,7 +487,12 @@ namespace Leap
 
           // Rendo l'oggetto colpito "esplodibile", se già non è stato fatto in precedenza
           if (figlio.GetComponent<ParticleSystem>() == null)
+          {
             figlio.gameObject.AddComponent<ParticleSystem>();
+            ParticleSystem psF = figlio.GetComponent<ParticleSystem>();
+            psF.startColor = selMat.color;
+            psF.gravityModifier = -0.05f;
+          }
 
           om.Add(new ObjectMove(figlio, startC, startC + v));
         }
