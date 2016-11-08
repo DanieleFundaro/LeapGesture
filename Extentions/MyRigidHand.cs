@@ -11,6 +11,10 @@ namespace Leap
 
       private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f;
       private static string tag = null;
+      private static bool esplodi = false;
+      private static ObjectsMove om = null;
+      private static Color coloreRaggioSelezione = Color.red;
+      private static Material selMat = Resources.Load<Material>("SelectedObject");
 
       #endregion
 
@@ -382,12 +386,109 @@ namespace Leap
       #region Explosion effect
 
       /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">Colore del raggio.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Explosion(this RigidHand hand, Ray raySelection, Color colorRay, params string[] tagUntouchable)
+      {
+        if (!esplodi)
+        {
+          RaycastHit colpito = new RaycastHit();
+
+          // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
+          DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
+
+          // Controllo se è stato puntato un oggetto
+          if (Physics.Raycast(raySelection, out colpito))
+            if (colpito.collider != null)
+            {
+              Transform padre = colpito.collider.transform.parent;
+
+              // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano o gli oggetti da ignorare
+              if (padre != null)
+              {
+                bool tagTrovato = false;
+
+                if (tagUntouchable != null)
+                  for (int i = 0; i < tagUntouchable.Length; i++)
+                    if (padre.tag == tagUntouchable[i])
+                    {
+                      tagTrovato = true;
+                      break;
+                    }
+
+                if (!tagTrovato)
+                {
+                  RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
+
+                  if (rh == null)
+                    om = hand.SelectObjects(padre);
+                }
+              }
+            }
+
+          // Controllo del gesto tipico per l'esplosione
+          esplodi = om != null && hand.ExplosionGesture();
+        }
+
+        // Parte grafica dell'esplosione. Sposto tutti gli oggetti, già selezionati, di una distanza calcolata in precedenza
+        if (esplodi)
+          esplodi = hand.PlayExplosion(om);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">Colore del raggio.</param>
+      public static void Explosion(this RigidHand hand, Ray raySelection, Color colorRay)
+      {
+        Explosion(hand, raySelection, colorRay, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Explosion(this RigidHand hand, Ray raySelection, params string[] tagUntouchable)
+      {
+        Explosion(hand, raySelection, coloreRaggioSelezione, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      public static void Explosion(this RigidHand hand, Ray raySelection)
+      {
+        Explosion(hand, raySelection, coloreRaggioSelezione, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, selezionati dal raggio con origine sul palmo della mano e con direzione il vettore normale del palmo.
+      /// <param name="hand"></param>
+      public static void Explosion(this RigidHand hand)
+      {
+        Vector3 dir = hand.GetPalmNormal();
+        dir.Normalize();
+
+        // Calcolo il raggio e distanzio il punto di inizio dal palmo della mano di 0.1, così non colpisco le dita della stessa mano
+        Ray raggio = new Ray(Vector3.MoveTowards(hand.GetPalmPosition(), dir, 0.07f), dir);
+
+        Explosion(hand, raggio, coloreRaggioSelezione, tag);
+      }
+
+      /// <summary>
       /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi, entro il tempo temp.
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float temp)
+      /// <returns></returns>
+      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float temp = 3)
       {
         ObjectsMove om = new ObjectsMove();
         int count = parent.childCount;
@@ -410,22 +511,12 @@ namespace Leap
 
         // Effettuo la distruzione delle particelle che sono state aggiunge agli ogetti (se ce ne sono).
         // Se supero il tempo, dovrò ripetere l'operazione
-        ParticleSystem[] ps1 = SceneSettings.FindObjectsOfType<ParticleSystem>();
+        ParticleSystem[] ps1 = Object.FindObjectsOfType<ParticleSystem>();
 
         foreach (ParticleSystem p in ps1)
-          UnityEngine.Object.Destroy(p, temp);
+          Object.Destroy(p, temp);
 
         return om;
-      }
-
-      /// <summary>
-      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi, entro 3 secondi di tempo.
-      /// </summary>
-      /// <param name="hand"></param>
-      /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent)
-      {
-        return SelectObjects(hand, parent, 3);
       }
 
       /// <summary>
@@ -465,6 +556,10 @@ namespace Leap
         return percento != 1;
       }
 
+      #endregion
+
+      #region Metodi privati
+
       private static bool Gesture(RigidHand hand, float grabStrengthCorrente, float grabStrengthPassato)
       {
         Controller c = new Controller();
@@ -473,6 +568,21 @@ namespace Leap
         Hand manoPassata = framePassato.Hand(hand.LeapID()), manoCorrente = frameCorrente.Hand(hand.LeapID());
 
         return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && SceneSettings.FindObjectsOfType<ParticleSystem>() != null;
+      }
+
+      private static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)
+      {
+        GameObject myLine = new GameObject();
+        myLine.transform.position = start;
+        myLine.AddComponent<LineRenderer>();
+
+        LineRenderer lr = myLine.GetComponent<LineRenderer>();
+        lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
+        lr.SetColors(color, color);
+        lr.SetWidth(0.0025f, 0.0025f);
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, end);
+        GameObject.Destroy(myLine, duration);
       }
 
       #endregion
