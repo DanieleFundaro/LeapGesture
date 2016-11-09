@@ -4,11 +4,13 @@ using Leap.Unity;
 
 public class EnableExplosion : MonoBehaviour
 {
+  public void Start()
+  {
+    Utility.Enable<Explosion>(transform, null, false);
+  }
+
   public void OnTriggerEnter(Collider other)
   {
-    Explosion ex = GetComponentInParent<Explosion>();
-
-    if (other.GetComponentInParent<IHandModel>() != null && ex != null)
-      ex.enabled = !ex.enabled;
+    Utility.Enable<Explosion>(transform, other);
   }
 }
