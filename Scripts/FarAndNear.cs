@@ -115,19 +115,7 @@ public class FarAndNear : MonoBehaviour
 
     // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
     if (mano.IsTracked)
-    {
-      GameObject myLine = new GameObject();
-      myLine.transform.position = mano.GetPalmPosition();
-      myLine.AddComponent<LineRenderer>();
-
-      LineRenderer lr = myLine.GetComponent<LineRenderer>();
-      lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-      lr.SetColors(Color.green, Color.yellow);
-      lr.SetWidth(0.0025f, 0.0025f);
-      lr.SetPosition(0, mano.GetPalmPosition());
-      lr.SetPosition(1, mano.GetPalmPosition() + dir);
-      GameObject.Destroy(myLine, 0.05f);
-    }
+      Utility.DrawLine(mano.GetPalmPosition(), mano.GetPalmPosition() + dir, Color.green, 0.05f);
   }
 
   private void StoAfferrando(bool stoAfferrando)
