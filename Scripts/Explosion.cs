@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using Leap;
 using Leap.Unity;
-using System;
-using UnityEditor;
 
 public class Explosion : MonoBehaviour
 {
@@ -27,9 +25,8 @@ public class Explosion : MonoBehaviour
 
       if (cont.IsConnected)
       {
-        Vector3 dir = mano.GetPalmNormal();
-        dir.Normalize();
-        Ray raggio = new Ray(Vector3.MoveTowards(mano.GetPalmPosition(), dir, 0.07f), dir);
+        FingerModel dito = mano.fingers[1];
+        Ray raggio = new Ray(dito.GetBoneCenter(3), dito.GetBoneDirection(3));
 
         mano.Explosion(raggio, "Imprendibile", "MainCamera");
       }
