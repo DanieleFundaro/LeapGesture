@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Leap.Unity;
 
 public class EnableFarAndNear : MonoBehaviour
 {
+  public void Start()
+  {
+    Utility.Enable<FarAndNear>(transform, null, false);
+  }
+
   public void OnTriggerEnter(Collider other)
   {
-    FarAndNear fan = GetComponentInParent<FarAndNear>();
-
-    if (other.GetComponentInParent<IHandModel>() != null && fan != null)
-      fan.enabled = !fan.enabled;
+    Utility.Enable<FarAndNear>(transform, other);
   }
 }
