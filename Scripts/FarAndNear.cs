@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using Leap.Unity;
 using System.Collections.Generic;
+using UnityEditor;
 
 public class FarAndNear : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
-  private Dictionary<Transform, Vector3> childsDir, localPosIniziale;
+  private Dictionary<Transform, Vector3> childsDir, localPosIniziali;
   private Transform padreDestro, padreSinistro;
   private bool selezione = false, afferraZoom = false;
   private float offset = 0, velocita = 10f;
@@ -13,11 +14,24 @@ public class FarAndNear : MonoBehaviour
   // Use this for initialization
   void Start()
   {
-    localPosIniziale = new Dictionary<Transform, Vector3>();
+    // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
+    localPosIniziali = new Dictionary<Transform, Vector3>();
     Transform[] objs = FindObjectsOfType<Transform>();
 
     foreach (Transform obj in objs)
-      localPosIniziale.Add(obj, new Vector3(obj.localPosition.x, obj.localPosition.y, obj.localPosition.z));
+    {
+      Transform p = obj.parent;
+      Vector3 dir = new Vector3(obj.position.x, obj.position.y, obj.position.z);
+
+      if (p != null)
+      {
+        dir.x -= p.position.x;
+        dir.y -= p.position.y;
+        dir.z -= p.position.z;
+      }
+
+      localPosIniziali.Add(obj, dir);
+    }
 
     Init();
   }
@@ -60,7 +74,7 @@ public class FarAndNear : MonoBehaviour
           Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocita + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
-          if (nuovaPosizione.IsLongerThan(localPosIniziale[obj.Key], obj.Value))
+          if (nuovaPosizione.IsLongerThan(localPosIniziali[obj.Key], obj.Value))
             obj.Key.position = padreDestro.position + nuovaPosizione;
         }
       }
