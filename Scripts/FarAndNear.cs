@@ -14,25 +14,7 @@ public class FarAndNear : MonoBehaviour
   // Use this for initialization
   void Start()
   {
-    // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
-    localPosIniziali = new Dictionary<Transform, Vector3>();
-    Transform[] objs = FindObjectsOfType<Transform>();
-
-    foreach (Transform obj in objs)
-    {
-      Transform p = obj.parent;
-      Vector3 dir = new Vector3(obj.position.x, obj.position.y, obj.position.z);
-
-      if (p != null)
-      {
-        dir.x -= p.position.x;
-        dir.y -= p.position.y;
-        dir.z -= p.position.z;
-      }
-
-      localPosIniziali.Add(obj, dir);
-    }
-
+    localPosIniziali = Utility.CalcoloLocalPositionTransform();
     Init();
   }
 
