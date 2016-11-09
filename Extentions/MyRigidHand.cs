@@ -216,8 +216,6 @@ namespace Leap
           obj.transform.SetParent(fingerBone);
         else
           StopPinch(hand, obj, parent);
-
-        
       }
 
       /// <summary>
@@ -331,10 +329,10 @@ namespace Leap
       {
         if (hand.GetLeapHand().PinchStrength >= min && !TagTrovato(obj, tagUntouchable))
         {
-          Vector3 dir = obj.position - fingerBone.position, dirMano = parent.position - fingerBone.position, nuovaPosizione = Vector3.Project(dirMano, dir);
+          Vector3 dir = obj.position - parent.position, dirMano = fingerBone.position - parent.position, nuovaPosizione = Vector3.Project(dirMano, dir);
 
           if (nuovaPosizione.IsLongerThan(localInitialPositionObj, dir))
-            obj.position = Vector3.MoveTowards(obj.position, fingerBone.position + nuovaPosizione, nuovaPosizione.magnitude);
+            obj.position = Vector3.MoveTowards(obj.position, parent.position + nuovaPosizione, nuovaPosizione.magnitude);
         }
       }
 
@@ -349,7 +347,7 @@ namespace Leap
       /// <param name="min">Valore minimo per cui si può considerare valido il gesto di pizzico [0, 1].</param>
       public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, float min)
       {
-        Pinch(hand, obj, parent, fingerBone, localInitialPositionObj, min, null);
+        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, min, null);
       }
 
       /// <summary>
@@ -363,7 +361,7 @@ namespace Leap
       /// <param name="tagUntouchable">Tag appartenenti agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, params string[] tagUntouchable)
       {
-        Pinch(hand, obj, parent, fingerBone, localInitialPositionObj, minPinch, tagUntouchable);
+        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, tagUntouchable);
       }
 
       /// <summary>
@@ -376,7 +374,7 @@ namespace Leap
       /// <param name="localInitialPositionObj">Posizione iniziale dell'oggetto obj, rispetto al genitore.</param>
       public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj)
       {
-        Pinch(hand, obj, parent, fingerBone, localInitialPositionObj, minPinch, null);
+        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, null);
       }
 
       #endregion
