@@ -396,7 +396,7 @@ namespace Leap
           RaycastHit colpito = new RaycastHit();
 
           // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
-          DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
+          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
 
           // Controllo se è stato puntato un oggetto
           if (Physics.Raycast(raySelection, out colpito))
@@ -568,21 +568,6 @@ namespace Leap
         Hand manoPassata = framePassato.Hand(hand.LeapID()), manoCorrente = frameCorrente.Hand(hand.LeapID());
 
         return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && SceneSettings.FindObjectsOfType<ParticleSystem>() != null;
-      }
-
-      private static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)
-      {
-        GameObject myLine = new GameObject();
-        myLine.transform.position = start;
-        myLine.AddComponent<LineRenderer>();
-
-        LineRenderer lr = myLine.GetComponent<LineRenderer>();
-        lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-        lr.SetColors(color, color);
-        lr.SetWidth(0.0025f, 0.0025f);
-        lr.SetPosition(0, start);
-        lr.SetPosition(1, end);
-        GameObject.Destroy(myLine, duration);
       }
 
       #endregion
