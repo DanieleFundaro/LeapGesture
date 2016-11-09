@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Leap.Unity;
 using System.Collections.Generic;
 
@@ -26,7 +25,19 @@ public class RadialPinch : MonoBehaviour
     Transform[] objs = FindObjectsOfType<Transform>();
 
     foreach (Transform obj in objs)
-      localPosIniziali.Add(obj, new Vector3(obj.localPosition.x, obj.localPosition.y, obj.localPosition.z));
+    {
+      Transform p = obj.parent;
+      Vector3 dir = new Vector3(obj.position.x, obj.position.y, obj.position.z);
+
+      if (p != null)
+      {
+        dir.x -= p.position.x;
+        dir.y -= p.position.y;
+        dir.z -= p.position.z;
+      }
+
+      localPosIniziali.Add(obj, dir);
+    }
 
     colliso = null;
     padre = null;
