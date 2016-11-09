@@ -31,8 +31,8 @@ public class Utility
     myLine.AddComponent<LineRenderer>();
 
     LineRenderer lr = myLine.GetComponent<LineRenderer>();
-    lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-    lr.SetColors(color, color);
+    lr.material = new Material(Shader.Find("Custom/LineShader"));
+    lr.material.color = color;
     lr.SetWidth(0.0025f, 0.0025f);
     lr.SetPosition(0, start);
     lr.SetPosition(1, end);
