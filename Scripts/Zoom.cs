@@ -5,7 +5,7 @@ public class Zoom : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
   public float grabAngleMin = 2.6f, grabAngleMax = 2.8f;
-  private float offsetZoom = 0;
+  private float offset = 0;
 
   // Update is called once per frame
   void Update()
@@ -14,11 +14,11 @@ public class Zoom : MonoBehaviour
       if (manoDestra.GetLeapHand().GrabAngle >= grabAngleMin && manoDestra.GetLeapHand().GrabAngle <= grabAngleMax  && manoSinistra.GetLeapHand().GrabAngle >= grabAngleMin && manoSinistra.GetLeapHand().GrabAngle <= grabAngleMax && manoDestra.GetPalmNormal().z / manoSinistra.GetPalmNormal().z < 0 && manoDestra.GetPalmDirection().x < 0 && manoSinistra.GetPalmDirection().x > 0)
       {
         BroadcastMessage("InZoom", true);
-        Camera.main.fieldOfView = (offsetZoom + Distanza());
+        Camera.main.fieldOfView = (offset + Distanza());
       }
       else
       {
-        offsetZoom = Camera.main.fieldOfView - Distanza();
+        offset = Camera.main.fieldOfView - Distanza();
         BroadcastMessage("InZoom", false);
       }
   }
@@ -26,10 +26,5 @@ public class Zoom : MonoBehaviour
   private float Distanza()
   {
     return (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude * 100;
-  }
-
-  private Vector3 PuntoMedio()
-  {
-    return (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()) / 2f;
   }
 }
