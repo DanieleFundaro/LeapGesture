@@ -44,7 +44,7 @@ public class ResetAll : MonoBehaviour
       float percento = tempo > tempoMax ? 1 : tempo / tempoMax;
 
       foreach (Transform obj in objsInScene)
-        if (obj != null && obj.tag != "Imprendibile" && obj.tag != "MainCamera" && obj.GetComponentInParent<IHandModel>() == null || obj.Equals(transform))
+        if (obj != null && obj.tag != "Imprendibile" && obj.GetComponentInParent<IHandModel>() == null || obj.Equals(transform))
           try
           {
             obj.position = Vector3.Lerp(obj.position, posIniziali[obj], percento);
@@ -59,7 +59,6 @@ public class ResetAll : MonoBehaviour
       {
         start = false;
         tempo = 0;
-        transform.tag = "Imprendibile";
       }
     }
   }
