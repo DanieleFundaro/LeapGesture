@@ -6,12 +6,12 @@ public class Utility
 {
   public static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)
   {
-    GameObject myLine = new GameObject();
+    GameObject myLine = new GameObject("Line");
     myLine.transform.position = start;
     myLine.AddComponent<LineRenderer>();
 
     LineRenderer lr = myLine.GetComponent<LineRenderer>();
-    lr.material = new Material(Shader.Find("Custom/LineShader"));
+    lr.material = Resources.Load<Material>("LineMaterial");
     lr.material.color = color;
     lr.SetWidth(0.0025f, 0.0025f);
     lr.SetPosition(0, start);
