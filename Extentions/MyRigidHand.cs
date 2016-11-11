@@ -12,7 +12,7 @@ namespace Leap
 
       private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f;
       private static string tag = null, testoExplosion = "Explosion ready.", testoImplosion = "Implosion ready.";
-      private static bool esplodi = false;
+      private static bool esplodi = false, implodi = false;
       private static ObjectsMove om = null;
       private static Color coloreRaggioSelezione = Color.red;
 
@@ -379,15 +379,16 @@ namespace Leap
 
       #endregion
 
-      #region Explosion effect
+      #region Explosion and implosion effect
 
       /// <summary>
       /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
       /// <param name="hand"></param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
       /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
       /// <param name="colorRay">Colore del raggio.</param>
       /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
-      public static void Explosion(this RigidHand hand, Ray raySelection, Color colorRay, params string[] tagUntouchable)
+      public static void Explosion(this RigidHand hand, string message, Ray raySelection, Color colorRay, params string[] tagUntouchable)
       {
         if (!esplodi)
         {
@@ -408,17 +409,38 @@ namespace Leap
                 RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
                 if (rh == null)
-                  om = hand.SelectObjects(padre);
+                  om = hand.SelectObjects(padre, message);
               }
             }
 
           // Controllo del gesto tipico per l'esplosione
-          esplodi = om != null && hand.ExplosionGesture();
+          esplodi = om != null && hand.ExplosionGesture(message);
         }
 
         // Parte grafica dell'esplosione. Sposto tutti gli oggetti, già selezionati, di una distanza calcolata in precedenza
         if (esplodi)
-          esplodi = hand.PlayExplosion(om);
+          esplodi = hand.Play(om);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">Colore del raggio.</param>
+      public static void Explosion(this RigidHand hand, string message, Ray raySelection, Color colorRay)
+      {
+        Explosion(hand, message, raySelection, colorRay, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// <param name="hand"></param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      public static void Explosion(this RigidHand hand, string message, Ray raySelection)
+      {
+        Explosion(hand, message, raySelection, coloreRaggioSelezione, tag);
       }
 
       /// <summary>
@@ -428,7 +450,7 @@ namespace Leap
       /// <param name="colorRay">Colore del raggio.</param>
       public static void Explosion(this RigidHand hand, Ray raySelection, Color colorRay)
       {
-        Explosion(hand, raySelection, colorRay, tag);
+        Explosion(hand, testoExplosion, raySelection, colorRay, tag);
       }
 
       /// <summary>
@@ -438,7 +460,22 @@ namespace Leap
       /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
       public static void Explosion(this RigidHand hand, Ray raySelection, params string[] tagUntouchable)
       {
-        Explosion(hand, raySelection, coloreRaggioSelezione, tagUntouchable);
+        Explosion(hand, testoExplosion, raySelection, coloreRaggioSelezione, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di esplosione e fa esplodere gli oggetti, selezionati dal raggio con origine sul palmo della mano e con direzione il vettore normale del palmo.
+      /// <param name="hand"></param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      public static void Explosion(this RigidHand hand, string message)
+      {
+        Vector3 dir = hand.GetPalmNormal();
+        dir.Normalize();
+
+        // Calcolo il raggio e distanzio il punto di inizio dal palmo della mano di 0.1, così non colpisco le dita della stessa mano
+        Ray raggio = new Ray(Vector3.MoveTowards(hand.GetPalmPosition(), dir, 0.07f), dir);
+
+        Explosion(hand, message, raggio, coloreRaggioSelezione, tag);
       }
 
       /// <summary>
@@ -447,7 +484,7 @@ namespace Leap
       /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
       public static void Explosion(this RigidHand hand, Ray raySelection)
       {
-        Explosion(hand, raySelection, coloreRaggioSelezione, tag);
+        Explosion(hand, testoExplosion, raySelection, coloreRaggioSelezione, tag);
       }
 
       /// <summary>
@@ -455,24 +492,183 @@ namespace Leap
       /// <param name="hand"></param>
       public static void Explosion(this RigidHand hand)
       {
+        Explosion(hand, testoExplosion);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">>Colore del raggio.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Implosion(this RigidHand hand,  Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection, Color colorRay, params string[] tagUntouchable)
+      {
+        if (!implodi)
+        {
+          RaycastHit colpito = new RaycastHit();
+
+          // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
+          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
+
+          // Controllo se è stato puntato un oggetto
+          if (Physics.Raycast(raySelection, out colpito))
+          {
+            if (colpito.collider != null)
+            {
+              Transform padre = colpito.collider.transform.parent;
+
+              // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano o gli oggetti da ignorare
+              if (padre != null && !TagTrovato(padre, tagUntouchable))
+              {
+                RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
+
+                if (rh == null)
+                  om = hand.SelectObjects(padre, message);
+              }
+
+              for (int i = 0; i < om.Count; i++)
+              {
+                Transform t = om.GetChild(i);
+                Vector3 pos = initialPosition[t];
+                om.SetEndOfChild(i, pos);
+              }
+            }
+          }
+
+          // Controllo del gesto tipico per l'esplosione
+          implodi = om != null && hand.ImplosionGesture(message);
+        }
+
+        // Parte grafica dell'esplosione. Sposto tutti gli oggetti, già selezionati, di una distanza calcolata in precedenza
+        if (implodi)
+          implodi = hand.Play(om);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">>Colore del raggio.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection, Color colorRay)
+      {
+        Implosion(hand, initialPosition, message, raySelection, colorRay, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection, params string[] tagUntouchable)
+      {
+        Implosion(hand, initialPosition, message, raySelection, coloreRaggioSelezione, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection)
+      {
+        Implosion(hand, initialPosition, message, raySelection, coloreRaggioSelezione, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, selezionati dal raggio con origine sul palmo della mano e con direzione il vettore normale del palmo.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, string message)
+      {
         Vector3 dir = hand.GetPalmNormal();
         dir.Normalize();
 
         // Calcolo il raggio e distanzio il punto di inizio dal palmo della mano di 0.1, così non colpisco le dita della stessa mano
         Ray raggio = new Ray(Vector3.MoveTowards(hand.GetPalmPosition(), dir, 0.07f), dir);
 
-        Explosion(hand, raggio, coloreRaggioSelezione, tag);
+        Implosion(hand, initialPosition, message, raggio, coloreRaggioSelezione, tag);
       }
 
       /// <summary>
-      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi (default) o implosi, entro il tempo temp.
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">>Colore del raggio.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, Ray raySelection, Color colorRay, params string[] tagUntouchable)
+      {
+        Implosion(hand, initialPosition, testoImplosion, raySelection, colorRay, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, Ray raySelection, params string[] tagUntouchable)
+      {
+        Implosion(hand, initialPosition, testoImplosion, raySelection, coloreRaggioSelezione, tagUntouchable);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      /// <param name="colorRay">>Colore del raggio.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, Ray raySelection, Color colorRay)
+      {
+        Implosion(hand, initialPosition, testoImplosion, raySelection, colorRay, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, escludendo quelli provvisti di tagUntouchagle da ignorare, selezionati dal raggio raySelection.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, Ray raySelection)
+      {
+        Implosion(hand, initialPosition, testoImplosion, raySelection, coloreRaggioSelezione, tag);
+      }
+
+      /// <summary>
+      /// Controlla se è stato effettuato il gesto di implosione e fa implodere gli oggetti, selezionati dal raggio con origine sul palmo della mano e con direzione il vettore normale del palmo.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="initialPosition">Posizioni iniziali degli oggetti selezionati.</param>
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition)
+      {
+        Implosion(hand, initialPosition, testoImplosion);
+      }
+
+      /// <summary>
+      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi o implosi, entro il tempo temp.
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
-      /// <param name="notificText">Testo di notifica da far visualizzare a schermo, quando tutto è pronto.</param>
+      /// <param name="message">Testo di notifica da far visualizzare a schermo, quando tutto è pronto.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
       /// <returns></returns>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, string notificText, float temp = 3)
+      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, string message, float temp = 3)
       {
         ObjectsMove om = new ObjectsMove();
         GameObject canvas = null;
@@ -484,10 +680,9 @@ namespace Leap
         for (int i = 0; i < count; i++)
         {
           Transform figlio = parent.GetChild(i);
-          Vector3 startP = parent.position, startC = figlio.position;
-          Vector3 v = startC - startP;
+          Vector3 startC = figlio.localPosition;
 
-          om.Add(new ObjectMove(figlio, startC, startC + v));
+          om.Add(new ObjectMove(figlio, startC, startC * 2));
         }
 
         tempo = 0;
@@ -550,7 +745,7 @@ namespace Leap
           t.fontSize = 1;
           t.color = Color.red;
           t.raycastTarget = false;
-          t.text = notificText;
+          t.text = message;
 
           #endregion
         }
@@ -568,7 +763,19 @@ namespace Leap
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
       /// <returns></returns>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float temp = 3)
+      public static ObjectsMove SelectObjectsExplosion(this RigidHand hand, Transform parent, float temp = 3)
+      {
+        return SelectObjects(hand, parent, testoExplosion, temp);
+      }
+
+      /// <summary>
+      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere implosi, entro il tempo temp.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
+      /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
+      /// <returns></returns>
+      public static ObjectsMove SelectObjectsImplosion(this RigidHand hand, Transform parent, float temp = 3)
       {
         return SelectObjects(hand, parent, testoExplosion, temp);
       }
@@ -577,10 +784,30 @@ namespace Leap
       /// Gesto di esplosione. Restituisce true se è stato effettuato correttamente il tipico gesto di esplosione/apertura di un assemblato di oggetti, false altrimenti.
       /// </summary>
       /// <param name="hand"></param>
-      /// <returns></returns>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      public static bool ExplosionGesture(this RigidHand hand, string message)
+      {
+        return Gesture(hand, 0, 1, message);
+      }
+
+      /// <summary>
+      /// Gesto di esplosione. Restituisce true se è stato effettuato correttamente il tipico gesto di esplosione/apertura di un assemblato di oggetti, false altrimenti.
+      /// </summary>
+      /// <param name="hand"></param>
       public static bool ExplosionGesture(this RigidHand hand)
       {
-        return Gesture(hand, 0, 1, testoExplosion);
+        return ExplosionGesture(hand, testoExplosion);
+      }
+
+      /// <summary>
+      /// Gesto di implosione. Restituisce true se è stato effettuato correttamente il tipico gesto di implosione/chiusura di un assemblato di oggetti, false altrimenti.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="message">Messaggio di notifica per l'utente.</param>
+      /// <returns></returns>
+      public static bool ImplosionGesture(this RigidHand hand, string message)
+      {
+        return Gesture(hand, 1, 0, message);
       }
 
       /// <summary>
@@ -590,22 +817,22 @@ namespace Leap
       /// <returns></returns>
       public static bool ImplosionGesture(this RigidHand hand)
       {
-        return Gesture(hand, 1, 0, testoImplosion);
+        return ImplosionGesture(hand, testoImplosion);
       }
 
       /// <summary>
-      /// Grafica dell'esplosione. Restituisce il valore true finchè il movimento degli oggetti è attivo, restituisce il valore false una volta arrivati a destinazione.
+      /// Grafica dell'esplosione (implosione). Restituisce il valore true finchè il movimento degli oggetti è attivo, restituisce il valore false una volta arrivati a destinazione.
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="items">Collezione degli oggetti che si vuole spostare.</param>
       /// <returns></returns>
-      public static bool PlayExplosion(this RigidHand hand, ObjectsMove items)
+      public static bool Play(this RigidHand hand, ObjectsMove items)
       {
         tempo += Time.deltaTime;
         float percento = tempo > tempoMax ? 1 : Mathf.Pow(tempo / tempoMax, 1f / 3f);
 
         for (int i = 0; i < items.Count; i++)
-          items.GetChild(i).position = Vector3.Lerp(items.GetStartOfChild(i), items.GetEndOfChild(i), percento);
+          items.GetChild(i).localPosition = Vector3.Lerp(items.GetStartOfChild(i), items.GetEndOfChild(i), percento);
 
         return percento != 1;
       }
