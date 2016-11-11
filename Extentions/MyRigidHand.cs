@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Leap
 {
@@ -10,7 +11,7 @@ namespace Leap
       #region Variabili private (valori iniziali e variabili di lavoro)
 
       private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f;
-      private static string tag = null;
+      private static string tag = null, testoExplosion = "Explosion ready.", testoImplosion = "Implosion ready.";
       private static bool esplodi = false;
       private static ObjectsMove om = null;
       private static Color coloreRaggioSelezione = Color.red;
@@ -465,16 +466,20 @@ namespace Leap
       }
 
       /// <summary>
-      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi, entro il tempo temp.
+      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi (default) o implosi, entro il tempo temp.
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
+      /// <param name="notificText">Testo di notifica da far visualizzare a schermo, quando tutto è pronto.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
       /// <returns></returns>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float temp = 3)
+      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, string notificText, float temp = 3)
       {
         ObjectsMove om = new ObjectsMove();
+        GameObject canvas = null;
+        string nomeCanvas = "Canvas explosion";
         int count = parent.childCount;
+        bool notificaEffettuata = false;
 
         // Per tutti i figli calcolo il punto iniziale e finale della traiettoria di esplosione
         for (int i = 0; i < count; i++)
@@ -483,28 +488,89 @@ namespace Leap
           Vector3 startP = parent.position, startC = figlio.position;
           Vector3 v = startC - startP;
 
-          // Rendo l'oggetto colpito "esplodibile", se già non è stato fatto in precedenza
-          if (figlio.GetComponent<ParticleSystem>() == null)
-          {
-            figlio.gameObject.AddComponent<ParticleSystem>();
-            ParticleSystem psF = figlio.GetComponent<ParticleSystem>();
-            psF.startColor = selMat.color;
-            psF.gravityModifier = -0.05f;
-          }
-
           om.Add(new ObjectMove(figlio, startC, startC + v));
         }
 
         tempo = 0;
 
-        // Effettuo la distruzione delle particelle che sono state aggiunge agli ogetti (se ce ne sono).
-        // Se supero il tempo, dovrò ripetere l'operazione
-        ParticleSystem[] ps1 = Object.FindObjectsOfType<ParticleSystem>();
+        // Rendo l'oggetto colpito "esplodibile", se già non è stato fatto in precedenza. Quindi notifico l'utente con un messaggio scritto.
+        Canvas[] can = Object.FindObjectsOfType<Canvas>();
 
-        foreach (ParticleSystem p in ps1)
-          Object.Destroy(p, temp);
+        foreach (Canvas c in can)
+          if (c.name == nomeCanvas)
+          {
+            canvas = c.gameObject;
+            notificaEffettuata = true;
+            break;
+          }
+
+        // Creazione della notifica (Canvas e Text)
+        if (!notificaEffettuata)
+        {
+          #region Creazione della notifica
+
+          canvas = new GameObject();
+          GameObject text = new GameObject();
+          canvas.name = nomeCanvas;
+          canvas.AddComponent<RectTransform>();
+          canvas.AddComponent<Canvas>();
+          canvas.AddComponent<CanvasScaler>();
+          canvas.AddComponent<GraphicRaycaster>();
+
+          RectTransform rtc = canvas.GetComponent<RectTransform>();
+          rtc.position = new Vector3(0, 0, 0.3f);
+          rtc.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+          rtc.sizeDelta = new Vector2(20, 20);
+
+          Canvas c = canvas.GetComponent<Canvas>();
+          c.renderMode = RenderMode.WorldSpace;
+          c.worldCamera = Camera.main;
+
+          CanvasScaler cs = canvas.GetComponent<CanvasScaler>();
+          cs.dynamicPixelsPerUnit = 100;
+          cs.referencePixelsPerUnit = 100;
+
+          GraphicRaycaster gr = canvas.GetComponent<GraphicRaycaster>();
+          gr.ignoreReversedGraphics = false;
+          gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
+
+          text.transform.SetParent(canvas.transform);
+          text.name = "Text explosion";
+          text.AddComponent<RectTransform>();
+          text.AddComponent<Text>();
+
+          RectTransform rtt = text.GetComponent<RectTransform>();
+          rtt.pivot = new Vector2(0, 0);
+          rtt.localPosition = new Vector3(2.5f, -8.5f, 0);
+          rtt.localScale = new Vector3(1, 1, 1);
+          rtt.sizeDelta = new Vector2(10, 2);
+
+          Text t = text.GetComponent<Text>();
+          t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+          t.fontSize = 1;
+          t.color = Color.red;
+          t.raycastTarget = false;
+          t.text = notificText;
+
+          #endregion
+        }
+
+        // Effettuo la distruzione della notificha (se c'è). Se supero il tempo, dovrò ripetere l'operazione
+        Object.Destroy(canvas, temp);
 
         return om;
+      }
+
+      /// <summary>
+      /// Rende gli oggetti, figli di parent, selezionati, quindi pronti per essere esplosi, entro il tempo temp.
+      /// </summary>
+      /// <param name="hand"></param>
+      /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
+      /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
+      /// <returns></returns>
+      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float temp = 3)
+      {
+        return SelectObjects(hand, parent, testoExplosion, temp);
       }
 
       /// <summary>
@@ -514,7 +580,7 @@ namespace Leap
       /// <returns></returns>
       public static bool ExplosionGesture(this RigidHand hand)
       {
-        return Gesture(hand, 0, 1);
+        return Gesture(hand, 0, 1, testoExplosion);
       }
 
       /// <summary>
@@ -524,7 +590,7 @@ namespace Leap
       /// <returns></returns>
       public static bool ImplosionGesture(this RigidHand hand)
       {
-        return Gesture(hand, 1, 0);
+        return Gesture(hand, 1, 0, testoImplosion);
       }
 
       /// <summary>
@@ -558,14 +624,15 @@ namespace Leap
         return false;
       }
 
-      private static bool Gesture(RigidHand hand, float grabStrengthCorrente, float grabStrengthPassato)
+      private static bool Gesture(RigidHand hand, float grabStrengthCorrente, float grabStrengthPassato, string testoGesto)
       {
         Controller c = new Controller();
         Frame framePassato = c.Frame(4);
         Frame frameCorrente = c.Frame();
         Hand manoPassata = framePassato.Hand(hand.LeapID()), manoCorrente = frameCorrente.Hand(hand.LeapID());
+        Text testo = Object.FindObjectOfType<Text>();
 
-        return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && SceneSettings.FindObjectsOfType<ParticleSystem>() != null;
+        return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && testo != null && testo.text == testoGesto;
       }
 
       #endregion
