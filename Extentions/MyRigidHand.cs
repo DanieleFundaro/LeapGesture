@@ -15,7 +15,6 @@ namespace Leap
       private static bool esplodi = false;
       private static ObjectsMove om = null;
       private static Color coloreRaggioSelezione = Color.red;
-      private static Material selMat = Resources.Load<Material>("SelectedObject");
 
       #endregion
 
@@ -510,6 +509,7 @@ namespace Leap
           #region Creazione della notifica
 
           canvas = new GameObject();
+          canvas.transform.SetParent(Camera.current.transform);
           GameObject text = new GameObject();
           canvas.name = nomeCanvas;
           canvas.AddComponent<RectTransform>();
@@ -518,7 +518,7 @@ namespace Leap
           canvas.AddComponent<GraphicRaycaster>();
 
           RectTransform rtc = canvas.GetComponent<RectTransform>();
-          rtc.position = new Vector3(0, 0, 0.3f);
+          rtc.localPosition = new Vector3(0, 0, 0.3f);
           rtc.localScale = new Vector3(0.02f, 0.02f, 0.02f);
           rtc.sizeDelta = new Vector2(20, 20);
 
