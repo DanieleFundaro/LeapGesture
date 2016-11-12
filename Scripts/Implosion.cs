@@ -37,7 +37,7 @@ public class Implosion : MonoBehaviour
         FingerModel dito = mano.fingers[1];
         Ray raggio = new Ray(dito.GetBoneCenter(3), dito.GetBoneDirection(3));
 
-        mano.Implosion(localPosIniziali, raggio, "Imprendibile", "MainCamera");
+        mano.Implosion(localPosIniziali, raggio, Color.blue, "Imprendibile", "MainCamera");
       }
     }
   }
