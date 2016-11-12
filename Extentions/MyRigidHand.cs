@@ -12,9 +12,10 @@ namespace Leap
 
       private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f;
       private static string tag = null, testoExplosion = "Explosion ready.", testoImplosion = "Implosion ready.";
-      private static bool esplodi = false, implodi = false;
-      private static ObjectsMove om = null;
+      private static bool esplodi = false, selezioneOggetti = false, implodi = false;
+      private static ObjectsMove objM = null;
       private static Color coloreRaggioSelezione = Color.red;
+      private static Material selezione = Resources.Load<Material>("SelectedObject");
 
       #endregion
 
@@ -409,17 +410,17 @@ namespace Leap
                 RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
                 if (rh == null)
-                  om = hand.SelectObjects(padre, message);
+                  objM = hand.SelectObjects(padre, message);
               }
             }
 
           // Controllo del gesto tipico per l'esplosione
-          esplodi = om != null && hand.ExplosionGesture(message);
+          esplodi = objM != null && hand.ExplosionGesture(message);
         }
 
         // Parte grafica dell'esplosione. Sposto tutti gli oggetti, già selezionati, di una distanza calcolata in precedenza
         if (esplodi)
-          esplodi = hand.Play(om);
+          esplodi = hand.Play(objM);
       }
 
       /// <summary>
@@ -504,7 +505,7 @@ namespace Leap
       /// <param name="raySelection">Raggio di selezione che punta sugli oggetti da far esplodere.</param>
       /// <param name="colorRay">>Colore del raggio.</param>
       /// <param name="tagUntouchable">Lista di tag appartenente agli oggetti da ignorare.</param>
-      public static void Implosion(this RigidHand hand,  Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection, Color colorRay, params string[] tagUntouchable)
+      public static void Implosion(this RigidHand hand, Dictionary<Transform, Vector3> initialPosition, string message, Ray raySelection, Color colorRay, params string[] tagUntouchable)
       {
         if (!implodi)
         {
@@ -526,25 +527,25 @@ namespace Leap
                 RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
                 if (rh == null)
-                  om = hand.SelectObjects(padre, message);
+                  objM = hand.SelectObjects(padre, message);
               }
 
-              for (int i = 0; i < om.Count; i++)
+              for (int i = 0; i < objM.Count; i++)
               {
-                Transform t = om.GetChild(i);
+                Transform t = objM.GetChild(i);
                 Vector3 pos = initialPosition[t];
-                om.SetEndOfChild(i, pos);
+                objM.SetEndOfChild(i, pos);
               }
             }
           }
-
+          
           // Controllo del gesto tipico per l'esplosione
-          implodi = om != null && hand.ImplosionGesture(message);
+          implodi = objM != null && hand.ImplosionGesture(message);
         }
 
         // Parte grafica dell'esplosione. Sposto tutti gli oggetti, già selezionati, di una distanza calcolata in precedenza
         if (implodi)
-          implodi = hand.Play(om);
+          implodi = hand.Play(objM);
       }
 
       /// <summary>
@@ -670,90 +671,98 @@ namespace Leap
       /// <returns></returns>
       public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, string message, float temp = 3)
       {
-        ObjectsMove om = new ObjectsMove();
-        GameObject canvas = null;
-        string nomeCanvas = "Canvas explosion";
-        int count = parent.childCount;
-        bool notificaEffettuata = false;
-
-        // Per tutti i figli calcolo il punto iniziale e finale della traiettoria di esplosione
-        for (int i = 0; i < count; i++)
+        if (!selezioneOggetti)
         {
-          Transform figlio = parent.GetChild(i);
-          Vector3 startC = figlio.localPosition;
+          ObjectsMove om = new ObjectsMove();
+          GameObject canvas = null;
+          string nomeCanvas = "Canvas explosion";
+          int count = parent.childCount;
+          bool notificaEffettuata = false;
 
-          om.Add(new ObjectMove(figlio, startC, startC * 2));
-        }
-
-        tempo = 0;
-
-        // Rendo l'oggetto colpito "esplodibile", se già non è stato fatto in precedenza. Quindi notifico l'utente con un messaggio scritto.
-        Canvas[] can = Object.FindObjectsOfType<Canvas>();
-
-        foreach (Canvas c in can)
-          if (c.name == nomeCanvas)
+          // Per tutti i figli calcolo il punto iniziale e finale della traiettoria di esplosione
+          for (int i = 0; i < count; i++)
           {
-            canvas = c.gameObject;
-            notificaEffettuata = true;
-            break;
+            Transform figlio = parent.GetChild(i);
+            Vector3 startC = figlio.localPosition;
+            MeshRenderer mr = figlio.GetComponent<MeshRenderer>();
+
+            om.Add(new ObjectMove(figlio, startC, startC * 2, mr.material));
+            mr.material = selezione;
+          }
+          
+          selezioneOggetti = true;
+          tempo = 0;
+
+          // Rendo l'oggetto colpito "esplodibile", se già non è stato fatto in precedenza. Quindi notifico l'utente con un messaggio scritto.
+          Canvas[] can = Object.FindObjectsOfType<Canvas>();
+
+          foreach (Canvas c in can)
+            if (c.name == nomeCanvas)
+            {
+              canvas = c.gameObject;
+              notificaEffettuata = true;
+              break;
+            }
+
+          // Creazione della notifica (Canvas e Text)
+          if (!notificaEffettuata)
+          {
+            #region Creazione della notifica
+
+            canvas = new GameObject();
+            canvas.transform.SetParent(Camera.main.transform);
+            GameObject text = new GameObject();
+            canvas.name = nomeCanvas;
+            canvas.AddComponent<RectTransform>();
+            canvas.AddComponent<Canvas>();
+            canvas.AddComponent<CanvasScaler>();
+            canvas.AddComponent<GraphicRaycaster>();
+
+            RectTransform rtc = canvas.GetComponent<RectTransform>();
+            rtc.localPosition = new Vector3(0, 0, 0.3f);
+            rtc.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+            rtc.sizeDelta = new Vector2(20, 20);
+
+            Canvas c = canvas.GetComponent<Canvas>();
+            c.renderMode = RenderMode.WorldSpace;
+            c.worldCamera = Camera.main;
+
+            CanvasScaler cs = canvas.GetComponent<CanvasScaler>();
+            cs.dynamicPixelsPerUnit = 100;
+            cs.referencePixelsPerUnit = 100;
+
+            GraphicRaycaster gr = canvas.GetComponent<GraphicRaycaster>();
+            gr.ignoreReversedGraphics = false;
+            gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
+
+            text.transform.SetParent(canvas.transform);
+            text.name = "Text explosion";
+            text.AddComponent<RectTransform>();
+            text.AddComponent<Text>();
+
+            RectTransform rtt = text.GetComponent<RectTransform>();
+            rtt.pivot = new Vector2(0, 0);
+            rtt.localPosition = new Vector3(2.5f, -8.5f, 0);
+            rtt.localScale = new Vector3(1, 1, 1);
+            rtt.sizeDelta = new Vector2(10, 2);
+
+            Text t = text.GetComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.fontSize = 1;
+            t.color = Color.red;
+            t.raycastTarget = false;
+            t.text = message;
+
+            #endregion
           }
 
-        // Creazione della notifica (Canvas e Text)
-        if (!notificaEffettuata)
-        {
-          #region Creazione della notifica
+          // Effettuo la distruzione della notificha (se c'è). Se supero il tempo, dovrò ripetere l'operazione
+          Object.Destroy(canvas, temp);
 
-          canvas = new GameObject();
-          canvas.transform.SetParent(Camera.current.transform);
-          GameObject text = new GameObject();
-          canvas.name = nomeCanvas;
-          canvas.AddComponent<RectTransform>();
-          canvas.AddComponent<Canvas>();
-          canvas.AddComponent<CanvasScaler>();
-          canvas.AddComponent<GraphicRaycaster>();
-
-          RectTransform rtc = canvas.GetComponent<RectTransform>();
-          rtc.localPosition = new Vector3(0, 0, 0.3f);
-          rtc.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-          rtc.sizeDelta = new Vector2(20, 20);
-
-          Canvas c = canvas.GetComponent<Canvas>();
-          c.renderMode = RenderMode.WorldSpace;
-          c.worldCamera = Camera.main;
-
-          CanvasScaler cs = canvas.GetComponent<CanvasScaler>();
-          cs.dynamicPixelsPerUnit = 100;
-          cs.referencePixelsPerUnit = 100;
-
-          GraphicRaycaster gr = canvas.GetComponent<GraphicRaycaster>();
-          gr.ignoreReversedGraphics = false;
-          gr.blockingObjects = GraphicRaycaster.BlockingObjects.None;
-
-          text.transform.SetParent(canvas.transform);
-          text.name = "Text explosion";
-          text.AddComponent<RectTransform>();
-          text.AddComponent<Text>();
-
-          RectTransform rtt = text.GetComponent<RectTransform>();
-          rtt.pivot = new Vector2(0, 0);
-          rtt.localPosition = new Vector3(2.5f, -8.5f, 0);
-          rtt.localScale = new Vector3(1, 1, 1);
-          rtt.sizeDelta = new Vector2(10, 2);
-
-          Text t = text.GetComponent<Text>();
-          t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-          t.fontSize = 1;
-          t.color = Color.red;
-          t.raycastTarget = false;
-          t.text = message;
-
-          #endregion
+          return om;
         }
 
-        // Effettuo la distruzione della notificha (se c'è). Se supero il tempo, dovrò ripetere l'operazione
-        Object.Destroy(canvas, temp);
-
-        return om;
+        return objM;
       }
 
       /// <summary>
@@ -840,7 +849,7 @@ namespace Leap
       #endregion
 
       #region Metodi privati
-      
+
       private static bool TagTrovato(Transform obj, string[] listaTag)
       {
         if (listaTag != null)
@@ -857,9 +866,25 @@ namespace Leap
         Frame framePassato = c.Frame(4);
         Frame frameCorrente = c.Frame();
         Hand manoPassata = framePassato.Hand(hand.LeapID()), manoCorrente = frameCorrente.Hand(hand.LeapID());
-        Text testo = Object.FindObjectOfType<Text>();
 
-        return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && testo != null && testo.text == testoGesto;
+        RipristinaMaterial(testoGesto);
+
+        return manoCorrente != null && manoPassata != null && manoCorrente.GrabStrength == grabStrengthCorrente && manoPassata.GrabStrength == grabStrengthPassato && selezioneOggetti;
+      }
+      
+      private static void RipristinaMaterial(string message)
+      {
+        Text testo = Object.FindObjectOfType<Text>();
+        selezioneOggetti = testo != null && testo.text == message;
+
+        if (!selezioneOggetti)
+          for (int i = 0; i < objM.Count; i++)
+          {
+            MeshRenderer mr = objM.GetChild(i).GetComponent<MeshRenderer>();
+
+            if (mr != null)
+              mr.material = objM.GetMaterialOfChild(i);
+          }
       }
 
       #endregion
@@ -869,16 +894,19 @@ namespace Leap
     {
       private Transform obj;
       private Vector3 start, end;
+      private Material material;
 
       public Transform Obj { get { return obj; } set { obj = value; } }
       public Vector3 Start { get { return start; } set { start = value; } }
       public Vector3 End { get { return end; } set { end = value; } }
+      public Material Material { get { return material; } set { material = value; } }
 
-      public ObjectMove(Transform obj, Vector3 start, Vector3 end)
+      public ObjectMove(Transform obj, Vector3 start, Vector3 end, Material material)
       {
         this.obj = obj;
         this.start = start;
         this.end = end;
+        this.material = material;
       }
     }
 
@@ -895,6 +923,8 @@ namespace Leap
       public Vector3 GetStartOfChild(int index) { return lista[index].Start; }
 
       public Vector3 GetEndOfChild(int index) { return lista[index].End; }
+
+      public Material GetMaterialOfChild(int index) { return lista[index].Material; }
 
       public void SetEndOfChild(int index, Vector3 newEnd) { lista[index].End = newEnd; }
 
