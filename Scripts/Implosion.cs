@@ -8,14 +8,7 @@ public class Implosion : MonoBehaviour
 {
   public RigidHand mano;
   private bool afferraZoom = false;
-  private Dictionary<Transform, Vector3> localPosIniziali;
-
-  // Use this for initialization
-  void Start()
-  {
-    localPosIniziali = Utility.CalcoloPositionTransform();
-  }
-
+  
   public void OnValidate()
   {
     IHandModel ihm = this.gameObject.GetComponent<IHandModel>();
@@ -37,7 +30,7 @@ public class Implosion : MonoBehaviour
         FingerModel dito = mano.fingers[1];
         Ray raggio = new Ray(dito.GetBoneCenter(3), dito.GetBoneDirection(3));
 
-        mano.Implosion(localPosIniziali, raggio, Color.blue, "Imprendibile", "MainCamera");
+        mano.Implosion(InitialPosition.Posizioni, raggio, Color.blue, "Imprendibile", "MainCamera");
       }
     }
   }
