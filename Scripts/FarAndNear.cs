@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
 using Leap.Unity;
 using System.Collections.Generic;
-using UnityEditor;
 
 public class FarAndNear : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
-  private Dictionary<Transform, Vector3> childsDir, localPosIniziali;
+  private Dictionary<Transform, Vector3> childsDir;
   private Transform padreDestro, padreSinistro;
   private bool selezione = false, afferraZoom = false;
   private float offset = 0, velocita = 10f;
@@ -14,7 +13,6 @@ public class FarAndNear : MonoBehaviour
   // Use this for initialization
   void Start()
   {
-    localPosIniziali = Utility.CalcoloLocalPositionTransform();
     Init();
   }
 
@@ -50,13 +48,14 @@ public class FarAndNear : MonoBehaviour
       if (selezione && manoDestra.IsTracked && manoSinistra.IsTracked && manoDestra.GetLeapHand().GrabAngle >= 2 && manoSinistra.GetLeapHand().GrabAngle >= 2)
       {
         float distanza = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
+        Dictionary<Transform, Vector3> posIniziali = InitialPosition.Posizioni;
 
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
         {
           Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocita + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
-          if (nuovaPosizione.IsLongerThan(localPosIniziali[obj.Key], obj.Value))
+          if (nuovaPosizione.IsLongerThan(posIniziali[obj.Key], obj.Value))
             obj.Key.position = padreDestro.position + nuovaPosizione;
         }
       }
