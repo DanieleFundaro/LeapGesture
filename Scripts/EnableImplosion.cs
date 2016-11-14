@@ -12,5 +12,13 @@ public class EnableImplosion : MonoBehaviour
   public void OnTriggerEnter(Collider other)
   {
     Utility.Enable<Implosion>(transform, other);
+
+    if(enabled)
+    {
+      Explosion ex = GetComponentInParent<Explosion>();
+      ex.enabled = false;
+      EnableExplosion eex = ex.GetComponentInChildren<EnableExplosion>();
+      eex.Start();
+    }
   }
 }
