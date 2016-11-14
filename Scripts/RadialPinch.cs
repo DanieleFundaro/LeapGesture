@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class RadialPinch : MonoBehaviour
 {
   public RigidHand mano;
-  private Dictionary<Transform, Vector3> localPosIniziali;
   public float minPinch = 0.9f;
   private Transform colliso, padre;
   private bool inZoom = false;
@@ -20,8 +19,6 @@ public class RadialPinch : MonoBehaviour
 
   public void Start()
   {
-    // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
-    localPosIniziali = Utility.CalcoloLocalPositionTransform();
     Init();
   }
 
@@ -42,7 +39,7 @@ public class RadialPinch : MonoBehaviour
   public void OnTriggerStay(Collider other)
   {
     if (!inZoom && colliso != null && padre != null)
-        mano.Pinch(colliso, transform, padre, localPosIniziali[colliso], minPinch);
+        mano.Pinch(colliso, transform, padre, InitialPosition.Posizioni[colliso], minPinch);
   }
 
   public void OnTriggerExit(Collider other)
