@@ -34,7 +34,7 @@ public class Utility
       foreach (MeshRenderer mr in mesh)
       {
         Color c = mr.material.color;
-        c.a = b.enabled ? 255 : 0;
+        c.a = b.enabled ? 1 : 0;
         mr.material.color = c;
       }
     }
