@@ -527,14 +527,16 @@ namespace Leap
                 RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
                 if (rh == null)
+                {
                   objM = hand.SelectObjects(padre, message);
-              }
 
-              for (int i = 0; i < objM.Count; i++)
-              {
-                Transform t = objM.GetChild(i);
-                Vector3 pos = initialPosition[t];
-                objM.SetEndOfChild(i, pos);
+                  for (int i = 0; i < objM.Count; i++)
+                  {
+                    Transform t = objM.GetChild(i);
+                    Vector3 pos = initialPosition[t];
+                    objM.SetEndOfChild(i, pos);
+                  }
+                }
               }
             }
           }
