@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Leap.Unity;
 
 public class EnableExplosion : MonoBehaviour
@@ -13,7 +12,7 @@ public class EnableExplosion : MonoBehaviour
   {
     Utility.Enable<Explosion>(transform, other);
 
-    if (enabled)
+    if (enabled && other.GetComponentInParent<IHandModel>() != null)
     {
       Implosion im = GetComponentInParent<Implosion>();
       im.enabled = false;
