@@ -25,7 +25,7 @@ public class Pinch : MonoBehaviour
   }
   public void OnTriggerEnter(Collider other)
   {
-    if(!inZoom && colliso == null && other.tag != "Imprendibile" && other.tag != "MainCamera")
+    if(!inZoom && colliso == null && Utility.TagDaEvitare(other.transform))
     {
       SendMessageUpwards("StoAfferrando", true);
       colliso = other;
