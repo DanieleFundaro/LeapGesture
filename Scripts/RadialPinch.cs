@@ -26,7 +26,7 @@ public class RadialPinch : MonoBehaviour
   {
     if (!inZoom && colliso == null && Utility.TagDaEvitare(other.transform))
     {
-      padre = other.transform.parent;
+      padre = Utility.GetPrimoPadre(other.transform);
 
       if (padre != null)
       {
