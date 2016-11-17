@@ -5,9 +5,10 @@ using System.Collections.Generic;
 public class FarAndNear : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
+  public float velocitàSpostamento = 1;
   private bool afferraZoom = false, spostamento = false;
   private Dictionary<Transform, Vector3> childsDir;
-  private float offset = 0, velocita = 10f;
+  private float offset = 0;
 
   void Start()
   {
@@ -47,7 +48,7 @@ public class FarAndNear : MonoBehaviour
 
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
         {
-          Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocita + 1);
+          Vector3 nuovaPosizione = obj.Value * ((distanza - offset) * velocitàSpostamento + 1);
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
           if (nuovaPosizione.IsLongerThan(posIniziali[obj.Key], obj.Value))
