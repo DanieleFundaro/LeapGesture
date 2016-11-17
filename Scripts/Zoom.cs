@@ -4,7 +4,7 @@ using Leap.Unity;
 public class Zoom : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
-  public float grabAngleMin = 2.6f, grabAngleMax = 2.8f;
+  public float grabAngleMin = 2.6f, grabAngleMax = 2.8f, velocità = 10f;
   private float offset = 0;
 
   // Update is called once per frame
@@ -25,6 +25,6 @@ public class Zoom : MonoBehaviour
 
   private float Distanza()
   {
-    return (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude * 100;
+    return (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude * velocità;
   }
 }
