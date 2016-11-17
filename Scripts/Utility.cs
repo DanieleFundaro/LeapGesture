@@ -1,5 +1,4 @@
 ﻿using Leap.Unity;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Utility
@@ -13,7 +12,7 @@ public class Utility
     LineRenderer lr = myLine.GetComponent<LineRenderer>();
     lr.material = Resources.Load<Material>("LineMaterial");
     lr.material.color = color;
-    lr.SetWidth(0.0025f, 0.0025f);
+    lr.SetWidth(0.025f, 0.025f);
     lr.SetPosition(0, start);
     lr.SetPosition(1, end);
     GameObject.Destroy(myLine, duration);
