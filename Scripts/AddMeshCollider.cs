@@ -10,7 +10,7 @@ public class AddMeshCollider : MonoBehaviour
     MeshRenderer[] objsMeshRenderer = FindObjectsOfType<MeshRenderer>();
 
     foreach (MeshRenderer obj in objsMeshRenderer)
-      if (obj.transform.tag != "Imprendibile" && obj.transform.tag != "MainCamera")
+      if (Utility.TagDaEvitare(obj.transform))
       {
         Collider c = obj.GetComponent<Collider>();
 
