@@ -27,5 +27,5 @@ public class InitialPosition : MonoBehaviour
     }
   }
 
-  public static Dictionary<Transform, Vector3> Posizioni { get { return pi; } }
+  public static Dictionary<Transform, Vector3> Direzioni { get { return pi; } }
 }
