@@ -9,11 +9,11 @@ public class InitialPosition : MonoBehaviour
   private void Start()
   {
     // Calcolo le posizioni iniziali di tutti gli oggetti presenti nella scena. All'occorrenza utilizzerò questi valori per effettuare qualche controllo
-    MeshRenderer[] objsMeshRenderer = FindObjectsOfType<MeshRenderer>();
+    Transform[] objs = FindObjectsOfType<Transform>();
 
-    foreach (MeshRenderer mr in objsMeshRenderer)
+    foreach (Transform obj in objs)
     {
-      Transform obj = mr.transform, p = Utility.GetPrimoPadre(obj);
+      Transform  p = Utility.GetPrimoPadre(obj);
       Vector3 dir = new Vector3(obj.position.x, obj.position.y, obj.position.z);
 
       if (p != null)
