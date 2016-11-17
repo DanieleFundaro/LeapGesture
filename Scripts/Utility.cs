@@ -39,4 +39,15 @@ public class Utility
       }
     }
   }
+  
+  public static Transform GetPrimoPadre(Transform other)
+  {
+    if (other == null)
+      return null;
+
+    if (other.parent == null)
+      return other;
+
+    return GetPrimoPadre(other.parent);
+  }
 }
