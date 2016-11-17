@@ -8,7 +8,7 @@ public class ResetAll : MonoBehaviour
   private Dictionary<Transform, Vector3> posIniziali;
   private Dictionary<Transform, Quaternion> rotIniziali;
   private Transform[] objsInScene;
-  private float tempo = 0, tempoMax = 1.0f;
+  private float tempo = 0, tempoMax = 1.0f, fieldOfView;
   private bool start = false;
 
   // Use this for initialization
@@ -24,6 +24,8 @@ public class ResetAll : MonoBehaviour
       posIniziali.Add(obj, new Vector3(obj.position.x, obj.position.y, obj.position.z));
       rotIniziali.Add(obj, new Quaternion(obj.rotation.x, obj.rotation.y, obj.rotation.z, obj.rotation.w));
     }
+
+    fieldOfView = Camera.main.fieldOfView;
   }
 
   public void OnTriggerEnter(Collider other)
@@ -32,6 +34,7 @@ public class ResetAll : MonoBehaviour
     {
       objsInScene = FindObjectsOfType<Transform>();
       transform.position = new Vector3(transform.position.x, transform.position.y - 0.01f, transform.position.z);
+      Camera.main.fieldOfView = fieldOfView;
       start = true;
     }
   }
