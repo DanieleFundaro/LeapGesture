@@ -50,4 +50,9 @@ public class Utility
 
     return GetPrimoPadre(other.parent);
   }
+
+  public static bool TagDaEvitare(Transform obj)
+  {
+    return obj.tag != "Imprendibile" && obj.tag != "MainCamera";
+  }
 }
