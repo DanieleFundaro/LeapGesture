@@ -27,7 +27,7 @@ public class FarAndNear : MonoBehaviour
         {
           Transform t = mr.transform;
 
-          if (t.tag != "Imprendibile" && t.tag != "MainCamera")
+          if (Utility.TagDaEvitare(t))
           {
             Transform padre = Utility.GetPrimoPadre(t);
             Vector3 dir = t.position - padre.position;
