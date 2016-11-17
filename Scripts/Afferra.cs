@@ -26,7 +26,7 @@ public class Afferra : MonoBehaviour
     if (!inZoom && colliso == null && other.tag != "Imprendibile" && other.tag != "MainCamera")
     {
       SendMessageUpwards("StoAfferrando", true);
-      colliso = GetPadre(other.transform);
+      colliso = Utility.GetPrimoPadre(other.transform);
     }
   }
 
@@ -44,17 +44,6 @@ public class Afferra : MonoBehaviour
       colliso = null;
       SendMessageUpwards("StoAfferrando", false);
     }
-  }
-
-  private Transform GetPadre(Transform other)
-  {
-    if (other == null)
-      return null;
-
-    if (other.parent == null)
-      return other;
-
-    return GetPadre(other.transform.parent);
   }
 
   private void InZoom(bool zoom)
