@@ -10,7 +10,7 @@ namespace Leap
     {
       #region Variabili private (valori iniziali e variabili di lavoro)
 
-      private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f;
+      private static float minGrab = 0.5f, minPinch = 0.9f, tempo = 0, tempoMax = 0.5f, lunghezzaRaggio = 100;
       private static string tag = null, testoExplosion = "Explosion ready.", testoImplosion = "Implosion ready.";
       private static bool esplodi = false, selezioneOggetti = false, implodi = false;
       private static ObjectsMove objM = null;
@@ -396,7 +396,7 @@ namespace Leap
           RaycastHit colpito = new RaycastHit();
 
           // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
-          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
+          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction * lunghezzaRaggio, colorRay, 0.05f);
 
           // Controllo se è stato puntato un oggetto
           if (Physics.Raycast(raySelection, out colpito))
@@ -512,7 +512,7 @@ namespace Leap
           RaycastHit colpito = new RaycastHit();
 
           // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
-          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction, colorRay, 0.05f);
+          Utility.DrawLine(raySelection.origin, raySelection.origin + raySelection.direction * lunghezzaRaggio, colorRay, 0.05f);
 
           // Controllo se è stato puntato un oggetto
           if (Physics.Raycast(raySelection, out colpito))
