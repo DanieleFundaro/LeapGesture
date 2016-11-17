@@ -5,12 +5,10 @@ using System.Collections.Generic;
 public class FarAndNear : MonoBehaviour
 {
   public RigidHand manoDestra, manoSinistra;
+  private bool afferraZoom = false, spostamento = false;
   private Dictionary<Transform, Vector3> childsDir;
-  private Transform padreDestro, padreSinistro;
-  private bool selezione = false, afferraZoom = false;
   private float offset = 0, velocita = 10f;
 
-  // Use this for initialization
   void Start()
   {
     Init();
@@ -19,36 +17,33 @@ public class FarAndNear : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    if (!afferraZoom)
+    if (!afferraZoom && manoDestra.IsTracked && manoSinistra.IsTracked)
     {
-      DrawLineHand(manoDestra);
-      DrawLineHand(manoSinistra);
-
-      if (!selezione)
+      if (!spostamento)
       {
-        padreDestro = GetPadreColpito(manoDestra);
-        padreSinistro = GetPadreColpito(manoSinistra);
+        MeshRenderer[] collMesh = FindObjectsOfType<MeshRenderer>();
 
-        // Controllo se sia la mano destra che la mano sinistra stanno puntando sullo stesso assemblato di oggetti. In caso affermativo posso iniziare la fare di spostamento radiale dei figli
-        if (padreDestro != null && padreSinistro != null && padreDestro.Equals(padreSinistro) && padreDestro.tag != "Imprendibile" && padreDestro.tag != "MainCamera")
+        foreach (MeshRenderer mr in collMesh)
         {
-          // Mi salvo a parte tutti i figli del padre e mi calcolo la loro direzione radiale
-          for (int i = 0; i < padreDestro.childCount; i++)
-          {
-            Transform child = padreDestro.GetChild(i);
-            childsDir.Add(child, child.position - padreDestro.position);
-          }
+          Transform t = mr.transform;
 
-          selezione = true;
-          offset = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
+          if (t.tag != "Imprendibile" && t.tag != "MainCamera")
+          {
+            Transform padre = Utility.GetPrimoPadre(t);
+            Vector3 dir = t.position - padre.position;
+            childsDir.Add(t, dir);
+          }
         }
+
+        offset = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
+        spostamento = true;
       }
 
       // Effettuo lo spostamento degli oggetti, controllando se è stato compiuto il giusto gesto (tutte e 2 le mani chiuse a pugno)
-      if (selezione && manoDestra.IsTracked && manoSinistra.IsTracked && manoDestra.GetLeapHand().GrabAngle >= 2 && manoSinistra.GetLeapHand().GrabAngle >= 2)
+      if (spostamento && manoDestra.GetLeapHand().GrabAngle >= 2 && manoSinistra.GetLeapHand().GrabAngle >= 2)
       {
         float distanza = (manoDestra.GetPalmPosition() - manoSinistra.GetPalmPosition()).magnitude;
-        Dictionary<Transform, Vector3> posIniziali = InitialPosition.Posizioni;
+        Dictionary<Transform, Vector3> posIniziali = InitialPosition.Direzioni;
 
         foreach (KeyValuePair<Transform, Vector3> obj in childsDir)
         {
@@ -56,61 +51,18 @@ public class FarAndNear : MonoBehaviour
 
           // Non permetto di scendere al di sotto del minimo della posizione di partenza, evitando quindi di far collassare tutto al centro.
           if (nuovaPosizione.IsLongerThan(posIniziali[obj.Key], obj.Value))
-            obj.Key.position = padreDestro.position + nuovaPosizione;
+            obj.Key.position = Utility.GetPrimoPadre(obj.Key).position + nuovaPosizione;
         }
       }
       else
         Init();
     }
-    else
-      Init();
   }
 
   private void Init()
   {
-    selezione = false;
+    spostamento = false;
     childsDir = new Dictionary<Transform, Vector3>();
-    padreDestro = null;
-    padreSinistro = null;
-  }
-
-  private Transform GetPadreColpito(RigidHand mano)
-  {
-    // Se è null vuol dire che la mano non è presente nella scena, quindi è unitile effettuare i calcoli
-    if (mano.IsTracked)
-    {
-      Vector3 dir = mano.GetPalmNormal();
-
-      // Calcolo il raggio e distanzio il punto di inizio dal palmo della mano di 0.1, così non colpisco le dita della stessa mano
-      Ray raggio = new Ray(Vector3.MoveTowards(mano.GetPalmPosition(), dir, 0.1f), dir);
-      RaycastHit colpito = new RaycastHit();
-
-      if (Physics.Raycast(raggio, out colpito))
-        if (colpito.collider != null)
-        {
-          Transform padre = colpito.collider.transform.parent;
-
-          // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano
-          if (padre != null)
-          {
-            RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
-
-            if (rh == null)
-              return padre;
-          }
-        }
-    }
-
-    return null;
-  }
-
-  private void DrawLineHand(RigidHand mano)
-  {
-    Vector3 dir = mano.GetPalmNormal();
-
-    // Disegna la linea per usarla come puntatore, così da facilitare la selezione degli oggetti
-    if (mano.IsTracked)
-      Utility.DrawLine(mano.GetPalmPosition(), mano.GetPalmPosition() + dir, Color.green, 0.05f);
   }
 
   private void StoAfferrando(bool stoAfferrando)
