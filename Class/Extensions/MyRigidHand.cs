@@ -237,8 +237,8 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="obj">Oggetto da pizzicare.</param>
-      /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto obj.</param>
       /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
+      /// <param name="parent">Eventuale genitore a cui appartiene l'oggetto obj.</param>
       /// <param name="tagUntouchable">Tag appartenenti agli oggetti da ignorare (null se tutti possono essere presi).</param>
       public static void Pinch(this RigidHand hand, Collider obj, Transform fingerBone, Transform parent, params string[] tagUntouchable)
       {
@@ -326,7 +326,8 @@ namespace Leap
       /// <param name="localInitialPositionObj">Posizione iniziale dell'oggetto obj, rispetto al genitore.</param>
       /// <param name="min">Valore minimo per cui si può considerare valido il gesto di pizzico [0, 1].</param>
       /// <param name="tagUntouchable">Tag appartenenti agli oggetti da ignorare (null se tutti possono essere presi).</param>
-      public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, float min, params string[] tagUntouchable)
+      /// <returns>Informa se il pinch è andato a buon fine</returns>
+      public static bool Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, float min, params string[] tagUntouchable)
       {
         if (hand.GetLeapHand().PinchStrength >= min && !TagTrovato(obj, tagUntouchable))
         {
@@ -334,7 +335,11 @@ namespace Leap
 
           if (nuovaPosizione.IsLongerThan(localInitialPositionObj, dir))
             obj.position = Vector3.MoveTowards(obj.position, parent.position + nuovaPosizione, nuovaPosizione.magnitude);
+
+          return true;
         }
+
+        return false;
       }
 
       /// <summary>
@@ -346,9 +351,10 @@ namespace Leap
       /// <param name="parent">Genitore dell'oggetto obj.</param>
       /// <param name="localInitialPositionObj">Posizione iniziale dell'oggetto obj, rispetto al genitore.</param>
       /// <param name="min">Valore minimo per cui si può considerare valido il gesto di pizzico [0, 1].</param>
-      public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, float min)
+      /// <returns>Informa se il pinch è andato a buon fine</returns>
+      public static bool Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, float min)
       {
-        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, min, null);
+        return Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, min, null);
       }
 
       /// <summary>
@@ -360,9 +366,10 @@ namespace Leap
       /// <param name="parent">Genitore dell'oggetto obj.</param>
       /// <param name="localInitialPositionObj">Posizione iniziale dell'oggetto obj, rispetto al genitore.</param>
       /// <param name="tagUntouchable">Tag appartenenti agli oggetti da ignorare (null se tutti possono essere presi).</param>
-      public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, params string[] tagUntouchable)
+      /// <returns>Informa se il pinch è andato a buon fine</returns>
+      public static bool Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj, params string[] tagUntouchable)
       {
-        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, tagUntouchable);
+        return Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, tagUntouchable);
       }
 
       /// <summary>
@@ -373,9 +380,9 @@ namespace Leap
       /// <param name="fingerBone">Dito che effettua il pinch dell'oggetto obj.</param>
       /// <param name="parent">Genitore dell'oggetto obj.</param>
       /// <param name="localInitialPositionObj">Posizione iniziale dell'oggetto obj, rispetto al genitore.</param>
-      public static void Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj)
+      public static bool Pinch(this RigidHand hand, Transform obj, Transform fingerBone, Transform parent, Vector3 localInitialPositionObj)
       {
-        Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, null);
+        return Pinch(hand, obj, fingerBone, parent, localInitialPositionObj, minPinch, null);
       }
 
       #endregion
@@ -402,7 +409,7 @@ namespace Leap
           if (Physics.Raycast(raySelection, out colpito))
             if (colpito.collider != null)
             {
-              Transform padre = colpito.collider.transform.parent;
+              Transform padre = Utility.GetPrimoPadre(colpito.collider.transform);
 
               // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano o gli oggetti da ignorare
               if (padre != null && !TagTrovato(padre, tagUntouchable))
@@ -410,7 +417,7 @@ namespace Leap
                 RigidHand rh = (RigidHand)padre.GetComponentInParent<IHandModel>();
 
                 if (rh == null)
-                  objM = hand.SelectObjects(padre, message);
+                  objM = hand.SelectObjects(padre, 20, message);
               }
             }
 
@@ -519,7 +526,7 @@ namespace Leap
           {
             if (colpito.collider != null)
             {
-              Transform padre = colpito.collider.transform.parent;
+              Transform padre = Utility.GetPrimoPadre(colpito.collider.transform);
 
               // Deve essere un assemblato di oggetti e non devo considerare, ovviamente, l'altra mano o gli oggetti da ignorare
               if (padre != null && !TagTrovato(padre, tagUntouchable))
@@ -528,7 +535,7 @@ namespace Leap
 
                 if (rh == null)
                 {
-                  objM = hand.SelectObjects(padre, message);
+                  objM = hand.SelectObjects(padre, 0, message);
 
                   for (int i = 0; i < objM.Count; i++)
                   {
@@ -668,30 +675,28 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
+      /// <param name="distance">Distanza dal punto iniziale.</param>
       /// <param name="message">Testo di notifica da far visualizzare a schermo, quando tutto è pronto.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
       /// <returns></returns>
-      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, string message, float temp = 3)
+      public static ObjectsMove SelectObjects(this RigidHand hand, Transform parent, float distance, string message, float temp = 3)
       {
         if (!selezioneOggetti)
         {
           ObjectsMove om = new ObjectsMove();
           GameObject canvas = null;
           string nomeCanvas = "Canvas explosion";
-          int count = parent.childCount;
           bool notificaEffettuata = false;
+          MeshRenderer[] meshs = parent.GetComponentsInChildren<MeshRenderer>();
 
-          // Per tutti i figli calcolo il punto iniziale e finale della traiettoria di esplosione
-          for (int i = 0; i < count; i++)
+          foreach (MeshRenderer mr in meshs)
           {
-            Transform figlio = parent.GetChild(i);
-            Vector3 startC = figlio.localPosition;
-            MeshRenderer mr = figlio.GetComponent<MeshRenderer>();
-
-            om.Add(new ObjectMove(figlio, startC, startC * 2, mr.material));
+            Transform f = mr.transform;
+            Vector3 sc = f.position - parent.position;
+            om.Add(new ObjectMove(f, sc, sc * distance, mr.material));
             mr.material = selezione;
           }
-          
+
           selezioneOggetti = true;
           tempo = 0;
 
@@ -772,11 +777,12 @@ namespace Leap
       /// </summary>
       /// <param name="hand"></param>
       /// <param name="parent">Oggetto padre che si vuole far esplodere.</param>
+      /// <param name="distance">Distanza dal punto iniziale.</param>
       /// <param name="temp">Tempo massimo a disposizione per poter effettuare l'esplosione, superato il quale bisogna rendere, di nuovo, gli oggetti selezinati.</param>
       /// <returns></returns>
-      public static ObjectsMove SelectObjectsExplosion(this RigidHand hand, Transform parent, float temp = 3)
+      public static ObjectsMove SelectObjectsExplosion(this RigidHand hand, Transform parent, float distance, float temp = 3)
       {
-        return SelectObjects(hand, parent, testoExplosion, temp);
+        return SelectObjects(hand, parent, distance, testoExplosion, temp);
       }
 
       /// <summary>
@@ -788,7 +794,7 @@ namespace Leap
       /// <returns></returns>
       public static ObjectsMove SelectObjectsImplosion(this RigidHand hand, Transform parent, float temp = 3)
       {
-        return SelectObjects(hand, parent, testoExplosion, temp);
+        return SelectObjects(hand, parent, 0, testoExplosion, temp);
       }
 
       /// <summary>
