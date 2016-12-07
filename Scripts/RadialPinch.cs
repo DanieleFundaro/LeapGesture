@@ -36,15 +36,14 @@ public class RadialPinch : MonoBehaviour
     }
   }
 
-  public void OnTriggerStay(Collider other)
+  public void Update()
   {
-    if (!inZoom && colliso != null && padre != null)
-        mano.Pinch(colliso, transform, padre, InitialPosition.Direzioni[colliso], minPinch);
-  }
+    bool a = false, possibilePinch;
 
-  public void OnTriggerExit(Collider other)
-  {
-    if (!inZoom && colliso != null)
+    if (possibilePinch = !inZoom && colliso != null && padre != null)
+      a = mano.Pinch(colliso, transform, padre, InitialPosition.Direzioni[colliso], minPinch);
+
+    if(possibilePinch && !a)
     {
       Init();
       SendMessageUpwards("StoAfferrando", false);
