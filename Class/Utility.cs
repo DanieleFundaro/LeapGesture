@@ -25,7 +25,7 @@ public class Utility
     if (b != null)
     {
       if (triggerSetting)
-        if (other.GetComponentInParent<IHandModel>() != null)
+        if (other.GetComponentInParent<FingerModel>() != null)
           b.enabled = !b.enabled;
 
       MeshRenderer[] mesh = obj.GetComponentsInChildren<MeshRenderer>();
