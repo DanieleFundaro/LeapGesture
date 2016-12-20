@@ -38,12 +38,12 @@ public class RadialPinch : MonoBehaviour
 
   public void Update()
   {
-    bool a = false, possibilePinch;
+    bool effettuato = false, possibilePinch;
 
     if (possibilePinch = !inZoom && colliso != null && padre != null)
-      a = mano.Pinch(colliso, transform, padre, InitialPosition.Direzioni[colliso], minPinch);
+      effettuato = mano.Pinch(colliso, transform, padre, InitialPosition.Direzioni[colliso], minPinch);
 
-    if(possibilePinch && !a)
+    if(possibilePinch && !effettuato)
     {
       Init();
       SendMessageUpwards("StoAfferrando", false);
