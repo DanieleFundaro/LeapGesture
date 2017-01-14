@@ -30,10 +30,10 @@ public class ResetAll : MonoBehaviour
 
   public void OnTriggerEnter(Collider other)
   {
-    if (other.GetComponentInParent<IHandModel>() != null && tempo == 0)
+    if (other.GetComponentInParent<IHandModel>() != null && tempo == 0 && other.tag != "Imprendibile")
     {
       objsInScene = FindObjectsOfType<Transform>();
-      transform.position = new Vector3(transform.position.x, transform.position.y - 0.01f, transform.position.z);
+      transform.position = new Vector3(transform.position.x, transform.position.y - 0.1f, transform.position.z);
       Camera.main.fieldOfView = fieldOfView;
       start = true;
     }
